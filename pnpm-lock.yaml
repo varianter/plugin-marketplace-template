@@ -84,16 +84,25 @@ importers:
       '@variant/mcp-server':
         specifier: workspace:*
         version: link:../../../packages/mcp-server
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
     devDependencies:
       '@modelcontextprotocol/sdk':
         specifier: 1.29.0
         version: 1.29.0(zod@4.4.3)
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^7.0.0
+        version: 7.1.2(svelte@5.56.1)(vite@8.0.16(@types/node@25.9.1)(esbuild@0.28.0)(tsx@4.22.4))
       '@types/node':
         specifier: 25.9.1
         version: 25.9.1
       concurrently:
         specifier: ^10.0.3
         version: 10.0.3
+      svelte:
+        specifier: ^5.56.1
+        version: 5.56.1
       tsx:
         specifier: 4.22.4
         version: 4.22.4

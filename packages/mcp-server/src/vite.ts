@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { dirname, resolve } from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
@@ -19,8 +20,24 @@ export function defineWidgetViteConfig(options: WidgetViteConfigOptions = {}) {
     throw new Error('WIDGET_PATH and WIDGET_NAME env vars are required');
   }
 
+  const require = createRequire(resolve(mcpDir, 'package.json'));
+  const svelteDir = dirname(require.resolve('svelte/package.json'));
+
   return defineConfig(({ mode }) => ({
     root: widgetPath,
+    resolve: {
+      alias: [
+        { find: /^svelte$/, replacement: resolve(svelteDir, 'src/index-client.js') },
+        {
+          find: /^svelte\/internal\/client$/,
+          replacement: resolve(svelteDir, 'src/internal/client/index.js'),
+        },
+        {
+          find: /^svelte\/internal\/disclose-version$/,
+          replacement: resolve(svelteDir, 'src/internal/disclose-version.js'),
+        },
+      ],
+    },
     plugins: [
       svelte({ configFile: options.svelteConfigFile ?? resolve(mcpDir, 'svelte.config.js') }),
       viteSingleFile(),

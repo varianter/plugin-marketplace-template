@@ -12,6 +12,11 @@ import { loadServerMetadata, type ServerMetadata } from './config/metadata.js';
 import { log } from './log.js';
 import { createMcpRouter, type McpServer } from './mcpEndpoint.js';
 
+export {
+  RESOURCE_MIME_TYPE,
+  registerAppResource,
+  registerAppTool,
+} from '@modelcontextprotocol/ext-apps/server';
 export type { RequestContext } from './auth/context.js';
 export { getRequestContext } from './auth/context.js';
 export type { Config, ConfigOverrides } from './config/config.js';
