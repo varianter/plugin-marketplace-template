@@ -6,6 +6,7 @@ const PluginManifestSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1).optional(),
   version: z.string().optional(),
+  homepage: z.string().url().optional(),
 });
 
 export interface ServerMetadata {
@@ -13,6 +14,7 @@ export interface ServerMetadata {
   title: string;
   description: string;
   version: string;
+  websiteUrl: string | undefined;
 }
 
 export function loadServerMetadata(): ServerMetadata {
@@ -29,6 +31,7 @@ export function loadServerMetadata(): ServerMetadata {
       process.env.MCP_SERVER_VERSION ??
       manifest?.version ??
       readPackageVersion(),
+    websiteUrl: process.env.MCP_WEBSITE_URL ?? manifest?.homepage,
   };
 }
 

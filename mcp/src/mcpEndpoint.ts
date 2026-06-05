@@ -87,6 +87,7 @@ function buildServer(opts: McpRouterOptions): McpServer {
     description: opts.metadata.description,
     version: opts.metadata.version,
     icons: [{ src: opts.iconUrl, mimeType: 'image/png' }],
+    ...(opts.metadata.websiteUrl && { websiteUrl: opts.metadata.websiteUrl }),
   });
   registerFeatureTools(server);
   return server;
