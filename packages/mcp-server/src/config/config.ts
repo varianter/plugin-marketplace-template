@@ -12,7 +12,6 @@ export interface Config {
   port: number;
   mcpPath: string;
   publicUrl: string;
-  corsOrigin: string;
   allowedRedirectOrigins: string[];
   mcpMaxSessions: number;
   rateLimitPerMinute: number;
@@ -139,7 +138,6 @@ export function loadConfig(overrides: ConfigOverrides = {}): Config {
         `http://${defaultPublicHost}:${port}`,
       'PUBLIC_URL',
     ),
-    corsOrigin: process.env.CORS_ORIGIN ?? '',
     allowedRedirectOrigins,
     mcpMaxSessions: parsePositiveInt(
       process.env.MCP_MAX_SESSIONS,

@@ -2,7 +2,6 @@ import type { Server } from 'node:http';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
-import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
 import { attachRequestContext } from './auth/middleware.js';
@@ -117,7 +116,6 @@ async function startConfiguredMcpServer(
     : undefined;
 
   if (!provider) log('warn', 'auth disabled');
-  if (cfg.corsOrigin === '*') log('warn', 'CORS_ORIGIN=* is set — restrict in production');
 
   const app = express();
   app.set('trust proxy', cfg.trustProxy);
@@ -136,8 +134,6 @@ async function startConfiguredMcpServer(
       },
     }),
   );
-  app.use(configureCors(cfg.corsOrigin));
-
   app.get('/healthz', (_req, res) => res.sendStatus(200));
   app.get('/icon.png', (_req, res) =>
     res.type('png').sendFile(join(resolvedAssetsDir, 'icon.png')),
@@ -197,18 +193,6 @@ async function startConfiguredMcpServer(
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 }
-
-function configureCors(origin: string): RequestHandlerOrNoop {
-  if (!origin) return (_req, _res, next) => next();
-  return cors({
-    origin: origin === '*' ? true : origin,
-    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Accept', 'Mcp-Session-Id', 'Authorization'],
-    exposedHeaders: ['Mcp-Session-Id'],
-  });
-}
-
-type RequestHandlerOrNoop = (req: Request, res: Response, next: NextFunction) => void;
 
 function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
   log('error', 'request error', { error: err instanceof Error ? err.message : String(err) });
