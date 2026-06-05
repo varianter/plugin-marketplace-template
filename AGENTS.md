@@ -12,22 +12,13 @@ When modifying any skill, always validate before committing:
 
 ```bash
 # Feature skills
-cd scripts && bun run validate.ts ../features/<name>
+cd scripts && bun run validate.ts ../plugins/<plugin>/features/<name>
 
 # Standalone skills
-cd scripts && bun run validate.ts ../skills/<name>
+cd scripts && bun run validate.ts ../plugins/<plugin>/skills/<name>
 ```
 
 Fix any validation errors before considering the change complete.
-
-### Linting
-
-When modifying files under `scripts/`:
-
-```bash
-cd scripts && bun run check
-cd scripts && bun run format   # auto-fix
-```
 
 ---
 
@@ -35,22 +26,27 @@ cd scripts && bun run format   # auto-fix
 
 ### Adding a tool
 
-**Feature-coupled tool** (has a corresponding skill in `features/<name>/`):
+All tools import shared infrastructure from `@variant/mcp-server`, not from relative paths.
+
+**Feature-coupled tool** (has a corresponding skill in `plugins/<plugin>/features/<name>/`):
 
 Without widget — flat file:
 
-1. Create `features/<name>/mcp/<toolName>.ts` exporting a `register*` function:
+1. Create `plugins/<plugin>/features/<name>/mcp/<toolName>.ts` exporting a `register*` function:
 
 ```typescript
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@variant/mcp-server';
+import { getRequestContext, log } from '@variant/mcp-server';
 import { z } from 'zod';
-import { log } from '../../../mcp/src/log.js';
 
 export function registerMyTool(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     'my-tool',
-    'Does something useful',
-    { param: z.string().describe('The input parameter') },
+    {
+      title: 'My Tool',
+      description: 'Does something useful',
+      inputSchema: { param: z.string().describe('The input parameter') },
+    },
     async ({ param }) => {
       log('info', 'my-tool: called', { param });
       return { content: [{ type: 'text', text: param }] };
@@ -61,25 +57,22 @@ export function registerMyTool(server: McpServer): void {
 
 With widget — colocated directory:
 
-1. Create `features/<name>/mcp/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
-2. Import shared infrastructure via `../../../../mcp/src/<module>.js` (one level deeper than the flat case)
-3. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
-4. The build script auto-discovers any `features/*/mcp/*/index.html` — no extra wiring needed
+1. Create `plugins/<plugin>/features/<name>/mcp/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
+2. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
+3. The build script auto-discovers any `features/*/mcp/*/index.html` — no extra wiring needed
 
-2. Register it in `mcp/src/registerFeatureTools.ts`.
+2. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`.
 
 **Standalone tool** (no corresponding skill):
 
-1. Create `tools/<tool-name>/<toolName>.ts` with the same pattern but import shared infrastructure via `'../../mcp/src/log.js'` etc.
-2. Register it in `mcp/src/index.ts`.
+1. Create `plugins/<plugin>/tools/<toolName>/<toolName>.ts` with the same pattern
+2. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`
 
 **Error handling:** Return tool-level errors as `{ content: [{ type: 'text', text: 'Error: ...' }], isError: true }`. Throw only for unexpected infrastructure failures.
 
-**Secrets:** Use `loadSecret(loader, 'ENV_VAR_NAME', 'keyvault-secret-name')` — checks env var first, falls back to Key Vault.
-
 ### Configuration
 
-All config comes from environment variables. See `mcp/src/config/config.ts`.
+All config comes from environment variables. See `packages/mcp-server/src/config/config.ts`.
 
 | Var | Default | Notes |
 |---|---|---|
@@ -88,7 +81,6 @@ All config comes from environment variables. See `mcp/src/config/config.ts`.
 | `MCP_PATH` | `/mcp` | HTTP endpoint path for MCP |
 | `AZURE_TENANT_ID` | — | Set in k8s ConfigMap |
 | `AZURE_CLIENT_ID` | — | Injected automatically by AKS Workload Identity webhook |
-| `KEYVAULT_URL` | — | Set locally only; empty in k8s (secrets injected as env vars) |
 
 ### Transport
 
@@ -99,46 +91,38 @@ Uses `StreamableHTTPServerTransport` (HTTP, not stdio):
 - `DELETE /mcp` — session teardown
 - `GET /healthz` — liveness/readiness probe
 
-oauth2-proxy sits in front in AKS. Ensure it does **not** strip `Mcp-Session-Id` headers.
-
 ### Local development
 
 ```bash
-cd mcp
-pnpm install
-cp ../.env.example ../.env   # fill in secrets
+pnpm install                     # install all workspace packages at repo root
+cp .env.example .env             # fill in secrets (stays at repo root)
 
-pnpm dev              # hot-reload server + widget watcher (full)
-pnpm dev:server       # hot-reload server only (skip widget build — faster iteration)
+# From repo root:
+pnpm dev:standard        # standard plugin — hot-reload server + widgets
+pnpm dev:server:standard # standard plugin — server only (faster, skips widgets)
+pnpm build               # build @variant/mcp-server then all plugin servers
+pnpm typecheck           # type-check all packages
+pnpm check               # biome lint + format check
+
+# From plugins/standard/mcp/:
 pnpm inspect          # MCP Inspector at http://localhost:6274
 pnpm jam              # MCPJam inspector UI
-
-pnpm build            # tsc + widget build
-pnpm typecheck        # type-check only (no emit — fast)
-pnpm check            # biome lint + format check
-pnpm format           # biome format --write
 ```
 
 ### Deployment
 
-Trigger the **Deploy** GitHub Actions workflow manually. It:
-1. Builds the Docker image using `mcp/Dockerfile` with the repo root as context
-2. Pushes to your container registry
-3. Updates your deployment target (e.g. a GitOps repo or cloud service)
-
-Configure the registry and deployment target in the workflow file at `.github/workflows/deploy.yml`.
+Trigger the **Deploy** GitHub Actions workflow manually. Select a plugin name (or "all") and environment. It:
+1. Builds the Docker image using `plugins/<plugin>/mcp/Dockerfile` with the repo root as context
+2. Pushes to ACR (`<plugin>-mcp` image name)
+3. Updates the GitOps deployment target
 
 ### TypeScript compilation
 
-`mcp/tsconfig.json` uses `rootDir: ".."` (repo root) so that feature tool files at `features/*/mcp/` are compiled into `mcp/dist/`. The compiled server entry point is `dist/mcp/src/index.js`.
+`plugins/<plugin>/mcp/tsconfig.json` uses `rootDir: ".."` (= `plugins/<plugin>/`) so that tool files at `tools/` and feature tool files at `features/*/mcp/` are compiled into `mcp/dist/` alongside the server.
 
-Feature tools import shared infrastructure via:
+Feature tools and standalone tools import shared infrastructure from `@variant/mcp-server`:
+
 ```typescript
-// Flat tool (features/<name>/mcp/<toolName>.ts)
-import { log } from '../../../mcp/src/log.js';
-import { loadSecret } from '../../../mcp/src/secrets/secrets.js';
-
-// Colocated tool+widget (features/<name>/mcp/<toolName>/<toolName>.ts)
-import { log } from '../../../../mcp/src/log.js';
-import { loadSecret } from '../../../../mcp/src/secrets/secrets.js';
+import type { McpServer } from '@variant/mcp-server';
+import { getRequestContext, log } from '@variant/mcp-server';
 ```

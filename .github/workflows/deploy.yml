@@ -3,8 +3,17 @@ name: Deploy
 on:
   workflow_dispatch:
     inputs:
+      plugin:
+        description: "Plugin to deploy ('all' deploys every plugin)"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - standard
+          # Add new plugins here as they are created under plugins/
       environment:
-        description: "Target environment to deploy"
+        description: "Target environment"
         required: true
         default: prod
         type: choice
@@ -12,17 +21,37 @@ on:
           - prod
 
 jobs:
+  # Resolve which plugins to deploy and emit a JSON matrix.
+  # Adding a new plugin only requires adding it to the `options` list above
+  # and updating the matrix script below.
+  resolve-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.value }}
+    steps:
+      - id: matrix
+        run: |
+          if [ "${{ inputs.plugin }}" = "all" ]; then
+            echo 'value={"plugin":["standard"]}' >> "$GITHUB_OUTPUT"
+          else
+            echo "value={\"plugin\":[\"${{ inputs.plugin }}\"]}" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
+    needs: resolve-matrix
+    strategy:
+      matrix: ${{ fromJson(needs.resolve-matrix.outputs.matrix) }}
+      fail-fast: false
     uses: varianter/shared-workflows/.github/workflows/build-and-deploy-shared.yaml@main
     secrets: inherit
     with:
       environment: ${{ inputs.environment || 'prod' }}
       acr-url: variantplatformacr.azurecr.io
-      image-name: mcp
+      image-name: ${{ matrix.plugin }}-mcp
       docker-context: .
-      dockerfile: ./mcp/Dockerfile
-      gitops-directory-path: deployments/${{ inputs.environment || 'prod' }}/workloads/mcp
-      gitops-workload-name: mcp
+      dockerfile: ./plugins/${{ matrix.plugin }}/mcp/Dockerfile
+      gitops-directory-path: deployments/${{ inputs.environment || 'prod' }}/workloads/${{ matrix.plugin }}-mcp
+      gitops-workload-name: ${{ matrix.plugin }}-mcp
       gitops-file-to-update: values.yaml
       gitops-yq-path: .image.tag
       gitops-continue-on-error: "true"

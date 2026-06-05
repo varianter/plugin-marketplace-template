@@ -1,88 +1,128 @@
 # Claude Code Plugin Template
 
-Starter template for building a Claude Code plugin with skills, MCP tools, and deployment workflows.
+Multi-plugin workspace for building Claude Code plugins with skills, MCP tools, and deployment workflows.
 
 ## Structure
 
 ```
-features/          ← Skills WITH dependent MCP tools (and widgets where applicable)
-  <name>/
-    SKILL.md       ← Claude Code skill definition
-    mcp/           ← MCP tool source files for this feature
-      <toolName>/  ← Colocated tool + widget (when the tool has an interactive widget)
-        <toolName>.ts   ← MCP tool registration
-        index.html      ← Widget entry point
-        app.ts          ← Widget bootstrap
-        <toolName>.svelte ← Widget UI component
-      <toolName>.ts ← MCP tool (no widget — flat file, not a directory)
-    references/    ← Supporting documentation
+packages/
+  mcp-server/        ← @variant/mcp-server — shared MCP server infrastructure
+    src/             ← Express setup, auth (Entra/OIDC), config, widgets
+    dist/            ← Compiled output (generated)
 
-skills/            ← Standalone skills (no MCP dependency)
-  <name>/
-    SKILL.md
-
-tools/             ← Standalone MCP tools (no corresponding skill)
-  <name>/
-    <toolName>.ts
-
-mcp/               ← MCP HTTP server
-  src/             ← Server infrastructure (index, config, secrets, clients)
-  Dockerfile
-  package.json
-
-scripts/           ← Skill validation and packaging CLI tools
+plugins/
+  standard/          ← The standard plugin (template for new plugins)
+    .claude-plugin/
+      plugin.json    ← Claude Code plugin manifest (skills paths, MCP server URL)
+    features/        ← Skills WITH colocated MCP tools (and widgets where applicable)
+      <name>/
+        SKILL.md
+        mcp/
+          <toolName>/          ← Tool + widget (when it has an interactive widget)
+            <toolName>.ts
+            index.html
+            app.ts
+            <toolName>.svelte
+          <toolName>.ts        ← Tool without widget (flat file)
+        references/
+    skills/          ← Standalone skills (no MCP dependency)
+      <name>/
+        SKILL.md
+    tools/           ← Standalone MCP tools (no corresponding skill)
+      <name>/
+        <toolName>.ts
+    mcp/             ← Plugin-specific MCP server (pnpm workspace package)
+      src/
+        index.ts     ← Entry point — calls startMcpServer() from @variant/mcp-server
+        registerTools.ts ← Registers this plugin's tools
+        assets/      ← Static assets (icon.png)
+      scripts/
+        build-widgets.mjs
+      Dockerfile
+      package.json   ← @variant/plugin-standard-mcp
+      tsconfig.json
 
 .claude-plugin/
-  plugin.json      ← Makes this a Claude Code plugin; declares skills paths + MCP server URL
+  marketplace.json   ← Repo-level manifest (Claude marketplace schema, lists all plugins)
+
+scripts/             ← Skill validation and packaging CLI tools
+tsconfig.base.json   ← Shared TypeScript base config
 ```
+
+## Adding a new plugin
+
+1. Create `plugins/<name>/` with the same structure as `plugins/standard/`
+2. Add `plugins/<name>/.claude-plugin/plugin.json` pointing to its skills and MCP server
+3. Add `plugins/<name>/mcp/package.json` with `"@variant/mcp-server": "workspace:*"`
+4. Reference the new plugin in `.claude-plugin/marketplace.json`
+5. Add the plugin name to the `options` list and `resolve-matrix` step in `.github/workflows/deploy.yml`
 
 ## Creating a new skill
 
-1. Add a new directory under `features/<name>/` (if it will have MCP tools) or `skills/<name>/` (standalone)
+1. Add a new directory under `plugins/<plugin>/features/<name>/` (if it will have MCP tools) or `plugins/<plugin>/skills/<name>/` (standalone)
 2. Create `SKILL.md` with `name` and `description` frontmatter
 3. Add `references/`, `assets/`, or `scripts/` as needed
 4. Run validation: `cd scripts && bun run validate.ts ../<path>/<skill-name>`
 
 ## Creating a new MCP tool
 
+Tools import shared infrastructure from `@variant/mcp-server` (not relative paths).
+
 Feature-coupled tool (has a corresponding skill), **without** widget:
 
-1. Add `features/<feature-name>/mcp/<toolName>.ts`
-2. Use the standard `register*` pattern (see AGENTS.md)
-3. Import shared infrastructure via `../../../mcp/src/<module>.js`
-4. Register the tool in `mcp/src/registerFeatureTools.ts`
+1. Add `plugins/<plugin>/features/<feature-name>/mcp/<toolName>.ts`
+2. Import: `import type { McpServer } from '@variant/mcp-server'`
+3. Export a `register<ToolName>(server: McpServer): void` function
+4. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`
 
 Feature-coupled tool **with** an interactive widget:
 
-1. Create `features/<feature-name>/mcp/<toolName>/` directory
-2. Add `<toolName>.ts` (tool registration), `index.html`, `app.ts`, `<toolName>.svelte` inside it
-3. Import shared infrastructure via `../../../../mcp/src/<module>.js` (one level deeper)
-4. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
-5. Register the tool in `mcp/src/registerFeatureTools.ts`
-6. The Vite build discovers `features/*/mcp/*/index.html` automatically — no extra config needed
+1. Create `plugins/<plugin>/features/<feature-name>/mcp/<toolName>/` directory
+2. Add `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte` inside it
+3. Load the compiled widget from `../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
+4. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`
+5. The Vite build discovers `features/*/mcp/*/index.html` automatically
 
 Standalone tool (no corresponding skill):
 
-1. Add the TypeScript file to `tools/<tool-name>/<toolName>.ts`
-2. Use the standard `register*` pattern (see AGENTS.md)
-3. Register it directly in `mcp/src/index.ts`
+1. Add `plugins/<plugin>/tools/<toolName>/<toolName>.ts`
+2. Export a `register<ToolName>(server: McpServer): void` function
+3. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`
 
 ## MCP local development
 
 ```bash
-cd mcp
-pnpm install
-cp ../.env.example ../.env  # fill in secrets
-pnpm dev           # hot-reload server + widgets (full)
-pnpm dev:server    # hot-reload server only (faster — skips widget build)
-pnpm jam           # MCP inspector UI
-pnpm build         # compile (tsc + widgets)
-pnpm typecheck     # type-check only (no emit — fast)
-pnpm check         # biome lint + format
+pnpm install                     # install all workspace packages
+cp .env.example .env             # fill in secrets
+
+# From repo root:
+pnpm dev:standard        # standard plugin — hot-reload server + widgets
+pnpm dev:server:standard # standard plugin — hot-reload server only (faster)
+pnpm build               # build @variant/mcp-server then all plugin servers
+pnpm typecheck           # type-check all packages
+pnpm check               # biome lint + format
+
+# Add dev:<name> / dev:server:<name> to root package.json for each new plugin.
 ```
+
+## @variant/mcp-server API
+
+The shared package exports:
+
+```typescript
+import { startMcpServer, getRequestContext, log, injectExtApps } from '@variant/mcp-server';
+import type { McpServer, RequestContext, ServerMetadata, Config } from '@variant/mcp-server';
+```
+
+- `startMcpServer(options)` — starts the full Express + MCP server with auth and lifecycle management
+- `getRequestContext()` — returns the authenticated user context inside a tool handler
+- `log(level, msg, extra?)` — structured JSON logger
+- `injectExtApps(html)` — injects the ext-apps bundle into a widget HTML file
 
 ## Deployment
 
-Trigger the **Deploy** GitHub Actions workflow from the repository UI. It builds the Docker image from `mcp/Dockerfile` with the repo root as build context and pushes to your container registry.
+Trigger the **Deploy** GitHub Actions workflow from the repository UI. Select a plugin (or "all") and environment. The workflow builds the Docker image from `plugins/<plugin>/mcp/Dockerfile` with the repo root as build context.
 
-Update the production MCP URL in `.claude-plugin/plugin.json` to your live server address after the first deployment.
+Each plugin's image name is `<plugin>-mcp` (e.g. `standard-mcp`).
+
+Update the production MCP URL in `plugins/<plugin>/.claude-plugin/plugin.json` after the first deployment.

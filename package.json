@@ -1,50 +1,26 @@
 {
-  "name": "@variant/claude-plugin-template",
+  "name": "@variant/claude-plugin-workspace",
   "private": true,
   "packageManager": "pnpm@11.5.2+sha512.71c631e382066efc25625d5cf029075de07b61b37f6e27350fbd84b1bda5864c8c1967adc280776b45c30a715c0359a3be08fef42d5bb09e2b99029979692916",
   "type": "module",
   "scripts": {
-    "link-skills": "bun scripts/link-skills.ts",
-    "predev": "bun scripts/link-skills.ts",
-    "dev": "pnpm run build:widget && concurrently \"node mcp/scripts/build-widgets.mjs --watch --mode development\" \"tsx watch --env-file .env mcp/src/index.ts\"",
-    "predev:server": "bun scripts/link-skills.ts",
-    "dev:server": "tsx watch --env-file .env mcp/src/index.ts",
-    "build": "pnpm run build:widget && tsc --project mcp/tsconfig.json && cp -r mcp/src/assets mcp/dist/mcp/src/",
-    "build:widget": "node mcp/scripts/build-widgets.mjs",
-    "typecheck": "tsc --project mcp/tsconfig.json --noEmit",
-    "start": "node mcp/dist/mcp/src/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector --transport http --server-url http://127.0.0.1:8080/mcp",
-    "jam": "pnpm dlx @mcpjam/inspector@latest --no-telemetry --config mcp.config.json --server plugin-mcp --oauth",
+    "dev:standard": "pnpm --filter @variant/plugin-standard-mcp run dev",
+    "dev:server:standard": "pnpm --filter @variant/plugin-standard-mcp run dev:server",
+    "build": "pnpm --filter @variant/mcp-server run build && pnpm --filter @variant/plugin-standard-mcp run build",
+    "typecheck": "pnpm -r run typecheck",
     "check": "biome check .",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "fix": "biome check . --fix",
     "kv": "tsx keyvault.ts"
   },
-  "dependencies": {
-    "@modelcontextprotocol/ext-apps": "^1.7.3",
-    "@modelcontextprotocol/sdk": "1.29.0",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.5.2",
-    "helmet": "^8.2.0",
-    "jose": "^6.2.3",
-    "openid-client": "^6.8.4",
-    "zod": "4.4.3"
-  },
   "devDependencies": {
     "@azure/identity": "4.13.1",
     "@azure/keyvault-secrets": "4.11.2",
     "@biomejs/biome": "2.4.16",
-    "@sveltejs/vite-plugin-svelte": "^7.0.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
     "@types/node": "25.9.1",
-    "concurrently": "^10.0.3",
-    "svelte": "^5.56.1",
+    "@variant/mcp-server": "workspace:*",
     "tsx": "4.22.4",
-    "typescript": "6.0.3",
-    "vite": "^8.0.16",
-    "vite-plugin-singlefile": "^2.3.2"
+    "typescript": "6.0.3"
   }
 }

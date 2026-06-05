@@ -17,8 +17,10 @@ export interface ServerMetadata {
   websiteUrl: string | undefined;
 }
 
-export function loadServerMetadata(): ServerMetadata {
-  const manifest = readPluginManifest();
+/** Load server metadata from env vars, falling back to the plugin manifest and package.json.
+ *  Pass `manifestDir` to override where `.claude-plugin/plugin.json` is looked up. */
+export function loadServerMetadata(manifestDir?: string): ServerMetadata {
+  const manifest = readPluginManifest(manifestDir ?? process.cwd());
   const name = process.env.MCP_SERVER_NAME ?? manifest?.name ?? 'plugin-mcp';
   const title = process.env.MCP_SERVER_TITLE ?? toTitle(name);
 
@@ -35,9 +37,9 @@ export function loadServerMetadata(): ServerMetadata {
   };
 }
 
-function readPluginManifest(): z.infer<typeof PluginManifestSchema> | undefined {
+function readPluginManifest(dir: string): z.infer<typeof PluginManifestSchema> | undefined {
   try {
-    const raw = readFileSync(join(process.cwd(), '.claude-plugin', 'plugin.json'), 'utf8');
+    const raw = readFileSync(join(dir, '.claude-plugin', 'plugin.json'), 'utf8');
     return PluginManifestSchema.parse(JSON.parse(raw));
   } catch {
     return undefined;

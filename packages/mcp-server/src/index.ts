@@ -9,11 +9,38 @@ import { bearerResourceMetadataUrl, createAuthRouter } from './auth/routes.js';
 import { loadConfig } from './config/config.js';
 import { loadServerMetadata } from './config/metadata.js';
 import { log } from './log.js';
-import { createMcpRouter } from './mcpEndpoint.js';
+import { createMcpRouter, type McpServer } from './mcpEndpoint.js';
 
-async function main(): Promise<void> {
+export type { McpServer };
+export type { RequestContext } from './auth/context.js';
+export type { ServerMetadata } from './config/metadata.js';
+export type { Config } from './config/config.js';
+export { getRequestContext } from './auth/context.js';
+export { log } from './log.js';
+export { injectExtApps } from './widgets.js';
+
+export interface McpServerOptions {
+  /** Called once per MCP session to register tools on the new McpServer instance. */
+  registerTools: (server: McpServer) => void;
+  /**
+   * Absolute path to the directory containing `assets/icon.png`.
+   * Defaults to the `assets/` directory co-located with this package's index.js.
+   */
+  assetsDir?: string;
+  /**
+   * Directory where `.claude-plugin/plugin.json` is located.
+   * Defaults to `process.cwd()`. Useful when the plugin manifest lives at a
+   * known path relative to the compiled entry point.
+   */
+  manifestDir?: string;
+}
+
+export async function startMcpServer(options: McpServerOptions): Promise<void> {
+  const { registerTools, assetsDir, manifestDir } = options;
+  const resolvedAssetsDir = assetsDir ?? join(import.meta.dirname, 'assets');
+
   const cfg = loadConfig();
-  const metadata = loadServerMetadata();
+  const metadata = loadServerMetadata(manifestDir);
   const provider = cfg.auth.enabled
     ? await OAuthProvider.create({
         issuerUrl: cfg.auth.issuerUrl,
@@ -53,7 +80,7 @@ async function main(): Promise<void> {
 
   app.get('/healthz', (_req, res) => res.sendStatus(200));
   app.get('/icon.png', (_req, res) =>
-    res.type('png').sendFile(join(import.meta.dirname, 'assets', 'icon.png')),
+    res.type('png').sendFile(join(resolvedAssetsDir, 'icon.png')),
   );
 
   if (provider) {
@@ -78,6 +105,7 @@ async function main(): Promise<void> {
       metadata,
       maxSessions: cfg.mcpMaxSessions,
       signal: shutdown.signal,
+      registerTools,
     }),
   );
   app.use(errorHandler);
@@ -104,13 +132,6 @@ async function main(): Promise<void> {
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 }
-
-main().catch((err) => {
-  process.stderr.write(
-    `${JSON.stringify({ level: 'error', msg: 'startup failed', error: String(err) })}\n`,
-  );
-  process.exit(1);
-});
 
 function configureCors(origin: string): RequestHandlerOrNoop {
   if (!origin) return (_req, _res, next) => next();

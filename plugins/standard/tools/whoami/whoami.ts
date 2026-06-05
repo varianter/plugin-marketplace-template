@@ -1,5 +1,5 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getRequestContext } from '../../mcp/src/auth/context.js';
+import type { McpServer } from '@variant/mcp-server';
+import { getRequestContext } from '@variant/mcp-server';
 
 export function registerWhoami(server: McpServer): void {
   server.registerTool(

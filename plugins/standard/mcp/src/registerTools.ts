@@ -1,7 +1,7 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@variant/mcp-server';
 import { registerWhoami } from '../../tools/whoami/whoami.js';
 
-export function registerFeatureTools(server: McpServer): void {
+export function registerTools(server: McpServer): void {
   registerWhoami(server);
   // Register feature-coupled MCP tools here.
   // Example:

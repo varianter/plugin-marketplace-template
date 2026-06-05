@@ -5,15 +5,18 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import express, { type Request, type Response } from 'express';
 import type { ServerMetadata } from './config/metadata.js';
 import { log } from './log.js';
-import { registerFeatureTools } from './registerFeatureTools.js';
+
+export { McpServer };
 
 const MAX_BODY_BYTES = '50mb';
 
-interface McpRouterOptions {
+export interface McpRouterOptions {
   iconUrl: string;
   metadata: ServerMetadata;
   maxSessions: number;
   signal: AbortSignal;
+  /** Called once per MCP session to register tools on the new McpServer instance. */
+  registerTools: (server: McpServer) => void;
 }
 
 export function createMcpRouter(opts: McpRouterOptions): express.Router {
@@ -89,6 +92,6 @@ function buildServer(opts: McpRouterOptions): McpServer {
     icons: [{ src: opts.iconUrl, mimeType: 'image/png' }],
     ...(opts.metadata.websiteUrl && { websiteUrl: opts.metadata.websiteUrl }),
   });
-  registerFeatureTools(server);
+  opts.registerTools(server);
   return server;
 }

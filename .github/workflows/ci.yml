@@ -27,6 +27,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Type-check
+        run: pnpm typecheck
+
   quality:
     name: Lint & Format
     runs-on: ubuntu-latest
