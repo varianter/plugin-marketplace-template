@@ -4,13 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  svelte@<=5.55.6: '>=5.55.7'
-  svelte@>=5.46.0 <=5.55.6: '>=5.55.7'
-  svelte@>=5.51.5 <=5.55.6: '>=5.55.7'
-  devalue@>=5.6.3 <=5.8.0: '>=5.8.1'
-  qs@>=6.11.1 <=6.15.1: '>=6.15.2'
-
 importers:
 
   .:
@@ -567,7 +560,7 @@ packages:
     resolution: {integrity: sha512-DrUBA2UXRfDmUX/ZTiEopd3X40yavsJF1FX2RygcuIScHL7o5YX1fMvoYnDhjeJQC4weCOklirpNWlcb2NiSeA==}
     engines: {node: ^20.19 || ^22.12 || >=24}
     peerDependencies:
-      svelte: '>=5.55.7'
+      svelte: ^5.46.4
       vite: ^8.0.0-beta.7 || ^8.0.0
 
   '@tybys/wasm-util@0.10.2':

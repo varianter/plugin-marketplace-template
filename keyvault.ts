@@ -12,18 +12,18 @@
  * Run with --force to overwrite all entries from Key Vault.
  */
 
-import { DefaultAzureCredential } from '@azure/identity';
-import { SecretClient } from '@azure/keyvault-secrets';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { DefaultAzureCredential } from '@azure/identity';
+import { SecretClient } from '@azure/keyvault-secrets';
 
 /**
  * Map of environment variable name → Key Vault secret name.
  * Edit this to match your vault's secrets.
  */
 const SECRETS: Record<string, string> = {
-  AUTH_CLIENT_ID:     'mcp-gateway-client-id',
-  AZURE_TENANT_ID:    'mcp-gateway-tenant-id',   // config derives AUTH_ISSUER_URL from this
+  AUTH_CLIENT_ID: 'mcp-gateway-client-id',
+  AZURE_TENANT_ID: 'mcp-gateway-tenant-id', // config derives AUTH_ISSUER_URL from this
   AUTH_CLIENT_SECRET: 'mcp-gateway-client-secret',
 };
 
@@ -61,7 +61,9 @@ async function main(): Promise<void> {
       additions.push(envName);
       console.log(`  ✓ ${envName} ← ${kvName}`);
     } catch (err) {
-      console.error(`  ✗ ${envName} ← ${kvName}: ${err instanceof Error ? err.message : String(err)}`);
+      console.error(
+        `  ✗ ${envName} ← ${kvName}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -69,15 +71,17 @@ async function main(): Promise<void> {
     writeEnvFile(ENV_FILE, existing);
     console.log(`\n${additions.length} secret(s) written to .env`);
   } else {
-    console.log(skipped > 0 ? `\nAll secrets already set (run with --force to overwrite).` : '\nNo secrets written.');
+    console.log(
+      skipped > 0
+        ? `\nAll secrets already set (run with --force to overwrite).`
+        : '\nNo secrets written.',
+    );
   }
 }
 
 /** Read a key from the already-parsed .env or fall back to the shell environment. */
 function readEnvVar(name: string): string | undefined {
-  const envFile = existsSync(ENV_FILE)
-    ? parseEnvFile(ENV_FILE)
-    : new Map<string, string>();
+  const envFile = existsSync(ENV_FILE) ? parseEnvFile(ENV_FILE) : new Map<string, string>();
   return envFile.get(name) ?? process.env[name];
 }
 

@@ -57,7 +57,9 @@ export function createAuthRouter(
 
   router.post('/register', limiter, express.json({ limit: MAX_TOKEN_BODY_BYTES }), (req, res) => {
     try {
-      res.status(201).json(handleRegistration(req.body, provider.clientId, cfg.allowedRedirectOrigins));
+      res
+        .status(201)
+        .json(handleRegistration(req.body, provider.clientId, cfg.allowedRedirectOrigins));
     } catch (err) {
       if (err instanceof RegistrationError) {
         res.status(400).json({ error: err.code, error_description: err.message });

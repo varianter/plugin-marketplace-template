@@ -27,12 +27,8 @@ export function loadServerMetadata(manifestDir?: string): ServerMetadata {
   return {
     name,
     title,
-    description:
-      process.env.MCP_SERVER_DESCRIPTION ?? manifest?.description ?? title,
-    version:
-      process.env.MCP_SERVER_VERSION ??
-      manifest?.version ??
-      readPackageVersion(),
+    description: process.env.MCP_SERVER_DESCRIPTION ?? manifest?.description ?? title,
+    version: process.env.MCP_SERVER_VERSION ?? manifest?.version ?? readPackageVersion(),
     websiteUrl: process.env.MCP_WEBSITE_URL ?? manifest?.homepage,
   };
 }

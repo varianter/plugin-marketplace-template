@@ -185,7 +185,10 @@ export class OAuthProvider {
         .map((scope) => {
           if (scope === defaultScope || scope === `api://${this.cfg.clientId}/.default`)
             return defaultScope;
-          if (aliasSet.has(scope) || (scope.startsWith(apiPrefix) && aliasSet.has(scope.slice(apiPrefix.length))))
+          if (
+            aliasSet.has(scope) ||
+            (scope.startsWith(apiPrefix) && aliasSet.has(scope.slice(apiPrefix.length)))
+          )
             return defaultScope;
           return scope;
         })
