@@ -42,11 +42,11 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.resolve-matrix.outputs.matrix) }}
       fail-fast: false
-    uses: varianter/shared-workflows/.github/workflows/build-and-deploy-shared.yaml@main
+    uses: example-org/shared-workflows/.github/workflows/build-and-deploy-shared.yaml@main
     secrets: inherit
     with:
       environment: ${{ inputs.environment || 'prod' }}
-      acr-url: variantplatformacr.azurecr.io
+      acr-url: example.azurecr.io
       image-name: ${{ matrix.plugin }}-mcp
       docker-context: .
       dockerfile: ./plugins/${{ matrix.plugin }}/mcp/Dockerfile

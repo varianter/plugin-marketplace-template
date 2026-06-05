@@ -12,7 +12,7 @@ interface WidgetEntry {
 const cwd = process.cwd();
 const mcpDir = findMcpDir(cwd);
 const pluginDir = resolve(mcpDir, '..');
-const featuresDir = resolve(pluginDir, 'features');
+const skillsDir = resolve(pluginDir, 'skills');
 const args = process.argv.slice(2).join(' ');
 
 const viteBin = resolve(
@@ -24,7 +24,7 @@ const viteBin = resolve(
 );
 const viteCommand = existsSync(viteBin) ? viteBin : 'vite';
 
-for (const { name, path: widgetPath } of discoverWidgets(featuresDir)) {
+for (const { name, path: widgetPath } of discoverWidgets(skillsDir)) {
   console.log(`Building widget: ${name}`);
   execSync(`${viteCommand} build ${args}`, {
     cwd: mcpDir,
@@ -43,18 +43,18 @@ function findMcpDir(start: string): string {
 function discoverWidgets(root: string): WidgetEntry[] {
   const widgets: WidgetEntry[] = [];
   try {
-    for (const feature of readdirSync(root)) {
-      const featureMcpDir = resolve(root, feature, 'mcp');
-      if (!isDirectory(featureMcpDir)) continue;
-      for (const entry of readdirSync(featureMcpDir)) {
-        const widgetDir = resolve(featureMcpDir, entry);
+    for (const skill of readdirSync(root)) {
+      const skillMcpDir = resolve(root, skill, 'mcp');
+      if (!isDirectory(skillMcpDir)) continue;
+      for (const entry of readdirSync(skillMcpDir)) {
+        const widgetDir = resolve(skillMcpDir, entry);
         if (isDirectory(widgetDir) && existsSync(resolve(widgetDir, 'index.html'))) {
           widgets.push({ name: toKebabCase(entry), path: widgetDir });
         }
       }
     }
   } catch {
-    // No features directory or no widgets.
+    // No skills directory or no widgets.
   }
   return widgets;
 }

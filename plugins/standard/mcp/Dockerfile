@@ -9,9 +9,9 @@ ARG PLUGIN_NAME=standard
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 # Copy workspace packages needed by this plugin
 COPY packages/ ./packages/
-# Copy plugin files (mcp server + features and tools that compile into it)
+# Copy plugin files (MCP server, skills with optional colocated MCP tools, and standalone tools)
 COPY plugins/${PLUGIN_NAME}/mcp/ ./plugins/${PLUGIN_NAME}/mcp/
-COPY plugins/${PLUGIN_NAME}/features/ ./plugins/${PLUGIN_NAME}/features/
+COPY plugins/${PLUGIN_NAME}/skills/ ./plugins/${PLUGIN_NAME}/skills/
 COPY plugins/${PLUGIN_NAME}/tools/ ./plugins/${PLUGIN_NAME}/tools/
 RUN pnpm install --frozen-lockfile
 # Build @variant/mcp-server first, then the plugin MCP server

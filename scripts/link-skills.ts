@@ -15,7 +15,7 @@ mkdirSync(targetDir, { recursive: true });
 
 const skillDirs: { name: string; src: string }[] = [];
 
-for (const base of ['skills', 'features']) {
+for (const base of ['skills']) {
   const dir = join(repoRoot, base);
   if (!existsSync(dir)) continue;
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

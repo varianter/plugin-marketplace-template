@@ -14,10 +14,10 @@ plugins/
   standard/          ← The standard plugin (template for new plugins)
     .claude-plugin/
       plugin.json    ← Claude Code plugin manifest (skills paths, MCP server URL)
-    features/        ← Skills WITH colocated MCP tools (and widgets where applicable)
+    skills/          ← Skills; each skill may optionally contain colocated MCP tools
       <name>/
         SKILL.md
-        mcp/
+        mcp/                  ← Optional MCP tools for this skill
           <toolName>/          ← Tool + widget (when it has an interactive widget)
             <toolName>.ts
             index.html
@@ -25,10 +25,7 @@ plugins/
             <toolName>.svelte
           <toolName>.ts        ← Tool without widget (flat file)
         references/
-    skills/          ← Standalone skills (no MCP dependency)
-      <name>/
-        SKILL.md
-    tools/           ← Standalone MCP tools (no corresponding skill)
+    tools/           ← Standalone MCP tools (not tied to a skill)
       <name>/
         <toolName>.ts
     mcp/             ← Plugin-specific MCP server (pnpm workspace package)
@@ -59,31 +56,31 @@ tsconfig.base.json   ← Shared TypeScript base config
 
 ## Creating a new skill
 
-1. Add a new directory under `plugins/<plugin>/features/<name>/` (if it will have MCP tools) or `plugins/<plugin>/skills/<name>/` (standalone)
+1. Add a new directory under `plugins/<plugin>/skills/<name>/`
 2. Create `SKILL.md` with `name` and `description` frontmatter
-3. Add `references/`, `assets/`, or `scripts/` as needed
-4. Run validation: `cd scripts && bun run validate.ts ../<path>/<skill-name>`
+3. Add `references/`, `assets/`, `scripts/`, or an optional `mcp/` directory as needed
+4. Run validation: `cd scripts && bun run validate.ts ../plugins/<plugin>/skills/<name>`
 
 ## Creating a new MCP tool
 
 Tools import shared infrastructure from `@variant/mcp-server` (not relative paths).
 
-Feature-coupled tool (has a corresponding skill), **without** widget:
+Skill-colocated tool, **without** widget:
 
-1. Add `plugins/<plugin>/features/<feature-name>/mcp/<toolName>.ts`
+1. Add `plugins/<plugin>/skills/<skill-name>/mcp/<toolName>.ts`
 2. Import: `import type { McpServer } from '@variant/mcp-server'`
 3. Export a `register<ToolName>(server: McpServer): void` function
 4. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`
 
-Feature-coupled tool **with** an interactive widget:
+Skill-colocated tool **with** an interactive widget:
 
-1. Create `plugins/<plugin>/features/<feature-name>/mcp/<toolName>/` directory
+1. Create `plugins/<plugin>/skills/<skill-name>/mcp/<toolName>/` directory
 2. Add `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte` inside it
-3. Load the compiled widget from `../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
+3. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
 4. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`
-5. The Vite build discovers `features/*/mcp/*/index.html` automatically
+5. The Vite build discovers `skills/*/mcp/*/index.html` automatically
 
-Standalone tool (no corresponding skill):
+Standalone tool (not tied to a skill):
 
 1. Add `plugins/<plugin>/tools/<toolName>/<toolName>.ts`
 2. Export a `register<ToolName>(server: McpServer): void` function

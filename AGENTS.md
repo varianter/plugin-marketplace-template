@@ -11,10 +11,6 @@ Operational reference for agents (Claude Code, Copilot, etc.) working in this re
 When modifying any skill, always validate before committing:
 
 ```bash
-# Feature skills
-cd scripts && bun run validate.ts ../plugins/<plugin>/features/<name>
-
-# Standalone skills
 cd scripts && bun run validate.ts ../plugins/<plugin>/skills/<name>
 ```
 
@@ -28,11 +24,11 @@ Fix any validation errors before considering the change complete.
 
 All tools import shared infrastructure from `@variant/mcp-server`, not from relative paths.
 
-**Feature-coupled tool** (has a corresponding skill in `plugins/<plugin>/features/<name>/`):
+**Skill-colocated tool** (tool lives under a skill in `plugins/<plugin>/skills/<name>/mcp/`):
 
 Without widget — flat file:
 
-1. Create `plugins/<plugin>/features/<name>/mcp/<toolName>.ts` exporting a `register*` function:
+1. Create `plugins/<plugin>/skills/<name>/mcp/<toolName>.ts` exporting a `register*` function:
 
 ```typescript
 import type { McpServer } from '@variant/mcp-server';
@@ -57,13 +53,13 @@ export function registerMyTool(server: McpServer): void {
 
 With widget — colocated directory:
 
-1. Create `plugins/<plugin>/features/<name>/mcp/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
+1. Create `plugins/<plugin>/skills/<name>/mcp/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
 2. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
-3. The build script auto-discovers any `features/*/mcp/*/index.html` — no extra wiring needed
+3. The build script auto-discovers any `skills/*/mcp/*/index.html` — no extra wiring needed
 
-2. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`.
+Register skill-colocated tools in `plugins/<plugin>/mcp/src/registerTools.ts`.
 
-**Standalone tool** (no corresponding skill):
+**Standalone tool** (not tied to a skill):
 
 1. Create `plugins/<plugin>/tools/<toolName>/<toolName>.ts` with the same pattern
 2. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`
@@ -118,9 +114,9 @@ Trigger the **Deploy** GitHub Actions workflow manually. Select a plugin name (o
 
 ### TypeScript compilation
 
-`plugins/<plugin>/mcp/tsconfig.json` uses `rootDir: ".."` (= `plugins/<plugin>/`) so that tool files at `tools/` and feature tool files at `features/*/mcp/` are compiled into `mcp/dist/` alongside the server.
+`plugins/<plugin>/mcp/tsconfig.json` uses `rootDir: ".."` (= `plugins/<plugin>/`) so that standalone tool files at `tools/` and skill-colocated tool files at `skills/*/mcp/` are compiled into `mcp/dist/` alongside the server.
 
-Feature tools and standalone tools import shared infrastructure from `@variant/mcp-server`:
+Skill-colocated tools and standalone tools import shared infrastructure from `@variant/mcp-server`:
 
 ```typescript
 import type { McpServer } from '@variant/mcp-server';

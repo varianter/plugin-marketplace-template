@@ -3,8 +3,8 @@ import { registerWhoami } from '../../tools/whoami/whoami.js';
 
 export function registerTools(server: McpServer): void {
   registerWhoami(server);
-  // Register feature-coupled MCP tools here.
+  // Register skill-colocated MCP tools here.
   // Example:
-  //   import { registerMyTool } from '../../features/my-feature/mcp/myTool.js';
+  //   import { registerMyTool } from '../../skills/my-skill/mcp/myTool.js';
   //   registerMyTool(server);
 }

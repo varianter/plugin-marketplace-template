@@ -43,7 +43,7 @@
   },
   "overrides": [
     {
-      "includes": ["features/*/mcp/**/*.svelte"],
+      "includes": ["skills/*/mcp/**/*.svelte"],
       "linter": {
         "rules": {
           "correctness": {

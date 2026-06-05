@@ -1,21 +1,21 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "variant-plugins",
+  "name": "example-marketplace",
   "version": "0.1.0",
-  "description": "Variant Claude Code plugins — skills, MCP tools, and deployment workflows",
+  "description": "Example Claude Code plugin marketplace data",
   "owner": {
-    "name": "Variant",
-    "url": "https://variant.no"
+    "name": "Example Organization",
+    "url": "https://example.com"
   },
   "plugins": [
     {
-      "name": "standard",
-      "source": "./plugins/standard",
+      "name": "example-plugin",
+      "source": "./plugins/example-plugin",
       "version": "0.1.0",
-      "description": "Standard Variant plugin — skills, MCP tools, and deployment workflows",
+      "description": "Example plugin entry for marketplace configuration",
       "license": "MIT",
-      "homepage": "https://github.com/varianter/plugin-template",
-      "repository": "https://github.com/varianter/plugin-template",
+      "homepage": "https://example.com/example-plugin",
+      "repository": "https://github.com/example/example-plugin",
       "category": "productivity"
     }
   ]

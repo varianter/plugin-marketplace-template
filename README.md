@@ -11,9 +11,9 @@ A multi-plugin workspace for building [Claude Code](https://claude.ai/claude-cod
 ## Getting started
 
 ```bash
-git clone https://github.com/varianter/plugin-template
-cd plugin-template
-cp .env.example .env          # fill in your Azure app credentials
+git clone https://github.com/varianter/claude-plugin-template
+cd claude-plugin-template
+cp .env.example .env          # fill in your auth credentials and config
 pnpm install
 ```
 
@@ -26,6 +26,18 @@ pnpm dev:server:standard      # server only — faster when not touching widgets
 
 Then update `plugins/standard/.claude-plugin/plugin.json` with your MCP server URL once deployed.
 
+## Configuration
+
+Runtime defaults live in [`plugin.config.json`](plugin.config.json). Environment variables override these values at runtime, so keep secrets such as client IDs and client secrets in `.env` or your deployment environment instead of committing them.
+
+The template config includes:
+
+- `mcpPath` — HTTP endpoint path for the MCP server, default `/mcp`
+- `auth` — OAuth/OIDC provider defaults, redirect origins, and client registration behavior
+- `limits` — MCP session and rate-limit defaults
+
+See [`plugin.config.schema.json`](plugin.config.schema.json) for all supported fields.
+
 ## Project structure
 
 ```
@@ -35,18 +47,19 @@ plugins/
   standard/          ← starter plugin (copy this to add a new plugin)
     .claude-plugin/
       plugin.json    ← plugin manifest (skills paths, MCP server URL)
-    features/        ← skills + their colocated MCP tools
-    skills/          ← standalone skills (no MCP dependency)
-    tools/           ← standalone MCP tools (no corresponding skill)
+    skills/          ← skills; each skill may optionally contain an mcp/ directory for colocated tools
+    skills/*/mcp     ← MCP tools colocated with a skill (optional)
+    tools/           ← standalone MCP tools (not tied to a skill)
     mcp/             ← deployable MCP HTTP server for this plugin
 .claude-plugin/
   marketplace.json   ← repo-level manifest listing all plugins
 scripts/             ← skill validator and packaging tools
+plugin.config.json   ← committed runtime defaults for MCP servers
 ```
 
 ## Adding a skill
 
-Create `plugins/standard/skills/<name>/SKILL.md` (standalone) or `plugins/standard/features/<name>/SKILL.md` (with MCP tools):
+Create `plugins/standard/skills/<name>/SKILL.md`. If the skill needs MCP tools, add them under `plugins/standard/skills/<name>/mcp/`:
 
 ```
 ---
@@ -80,7 +93,7 @@ export function registerMyTool(server: McpServer): void {
 }
 ```
 
-For feature-coupled tools (paired with a skill) see [`AGENTS.md`](AGENTS.md).
+For skill-colocated tools (tools under a skill's `mcp/` directory) see [`AGENTS.md`](AGENTS.md).
 
 ## Adding a new plugin
 

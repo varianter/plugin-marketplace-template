@@ -4,6 +4,6 @@
     "rootDir": "..",
     "outDir": "./dist"
   },
-  "include": ["src/**/*", "../features/*/mcp/**/*", "../tools/**/*"],
+  "include": ["src/**/*", "../skills/*/mcp/**/*", "../tools/**/*"],
   "exclude": ["node_modules", "dist"]
 }
