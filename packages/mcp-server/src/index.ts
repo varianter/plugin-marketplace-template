@@ -116,7 +116,7 @@ async function startConfiguredMcpServer(
       })
     : undefined;
 
-  if (!provider) log('warn', 'auth disabled: AUTH_ISSUER_URL or AUTH_CLIENT_ID not set');
+  if (!provider) log('warn', 'auth disabled');
   if (cfg.corsOrigin === '*') log('warn', 'CORS_ORIGIN=* is set — restrict in production');
 
   const app = express();

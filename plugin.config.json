@@ -1,0 +1,14 @@
+{
+  "$schema": "./plugin.config.schema.json",
+  "mcpPath": "/mcp",
+  "auth": {
+    "provider": "entra",
+    "compatibilityProxy": true,
+    "clientRegistration": "static",
+    "allowedRedirectOrigins": ["http://localhost", "http://127.0.0.1", "https://claude.ai"]
+  },
+  "limits": {
+    "maxSessions": 200,
+    "rateLimitPerMinute": 60
+  }
+}

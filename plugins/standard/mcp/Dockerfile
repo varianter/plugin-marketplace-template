@@ -29,7 +29,8 @@ ARG PLUGIN_NAME=standard
 COPY --from=builder /build/deploy/node_modules/ ./node_modules/
 # Flatten dist output into /app/ so paths match local dev depth (mcp/src/index.js)
 COPY --from=builder /build/plugins/${PLUGIN_NAME}/mcp/dist/ ./
-# Copy plugin manifest (read by the server at /app/.claude-plugin/plugin.json)
+# Copy public plugin runtime config and manifest (read by the server at startup)
+COPY plugin.config.json ./plugin.config.json
 COPY plugins/${PLUGIN_NAME}/.claude-plugin/ ./.claude-plugin/
 USER mcp
 EXPOSE 8080

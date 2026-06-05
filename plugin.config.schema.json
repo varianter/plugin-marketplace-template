@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claude Plugin Template Config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "mcpPath": { "type": "string", "pattern": "^/" },
+    "auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "generic-oidc",
+            "oidc",
+            "entra",
+            "auth0",
+            "okta",
+            "keycloak",
+            "cognito",
+            "zitadel"
+          ]
+        },
+        "tenantId": { "type": "string" },
+        "issuerUrl": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientSecret": { "type": "string" },
+        "audience": { "type": "string" },
+        "acceptedAudiences": { "type": "array", "items": { "type": "string" } },
+        "acceptedIssuers": { "type": "array", "items": { "type": "string" } },
+        "scopes": { "type": "array", "items": { "type": "string" } },
+        "scopeAliases": { "type": "array", "items": { "type": "string" } },
+        "compatibilityProxy": { "type": "boolean" },
+        "clientRegistration": { "type": "string", "enum": ["none", "provider", "static"] },
+        "allowedRedirectOrigins": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxSessions": { "type": "integer", "minimum": 1 },
+        "rateLimitPerMinute": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
