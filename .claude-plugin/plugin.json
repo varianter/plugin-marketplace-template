@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "claude-plugin-template",
+  "version": "0.1.0",
+  "description": "Claude Code plugin template — skills, MCP tools, and deployment workflows",
+  "skills": ["./skills", "./features"],
+  "license": "MIT",
+  "homepage": "https://github.com/varianter/plugin-template",
+  "repository": "https://github.com/varianter/plugin-template",
+  "mcpServers": {
+    "plugin-mcp": {
+      "type": "http",
+      "url": "https://your-mcp-server.example.com/mcp"
+    }
+  }
+}

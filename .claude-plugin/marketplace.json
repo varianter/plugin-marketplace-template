@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "claude-plugin-template",
+  "version": "0.1.0",
+  "description": "Claude Code plugin template — skills, MCP tools, and deployment workflows",
+  "plugins": [
+    {
+      "name": "claude-plugin-template",
+      "description": "Claude Code plugin template — skills, MCP tools, and deployment workflows",
+      "version": "0.1.0",
+      "license": "MIT",
+      "source": "./",
+      "homepage": "https://github.com/varianter/plugin-template",
+      "repository": "https://github.com/varianter/plugin-template",
+      "skills": ["./skills", "./features"],
+      "category": "productivity",
+      "mcpServers": {
+        "plugin-mcp": {
+          "type": "http",
+          "url": "https://your-mcp-server.example.com/mcp"
+        }
+      }
+    }
+  ]
+}
