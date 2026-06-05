@@ -3,6 +3,7 @@ import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 import type { OAuthMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { createRemoteJWKSet, type JWTPayload, jwtVerify } from 'jose';
 import * as client from 'openid-client';
+import { type AuthProviderKind, createProviderAdapter, type ProviderAdapter } from './adapters.js';
 
 export interface UserIdentity {
   /** Stable provider-scoped user id. Prefer this over email for authorization decisions. */
@@ -22,21 +23,22 @@ export interface OAuthProviderConfig {
   clientId: string;
   clientSecret?: string;
   audience?: string;
+  acceptedAudiences: string[];
+  acceptedIssuers: string[];
   scopes: string[];
-  /**
-   * Extra scope names that should be rewritten to `{clientId}/.default` in the Entra
-   * compatibility proxy. For example, `['claudeai']` rewrites both `claudeai` and
-   * `api://{clientId}/claudeai` → `{clientId}/.default`.
-   * Only used when `providerKind === 'entra'`.
-   */
+  /** Extra scope names to rewrite to `{clientId}/.default` (Entra compatibility proxy only). */
   scopeAliases: string[];
   publicUrl: string;
   mcpPath: string;
-  providerKind: 'oidc' | 'entra';
+  providerKind: AuthProviderKind;
+  /** Last-resort local /authorize and /token adapter for clients/providers that are not directly compatible. */
   compatibilityProxy: boolean;
+  /** How to advertise client registration. `static` exposes local /register returning AUTH_CLIENT_ID. */
+  clientRegistration: 'none' | 'provider' | 'static';
 }
 
 export class OAuthProvider {
+  private readonly adapter: ProviderAdapter;
   private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
   private readonly issuer: string;
   private readonly metadata: client.ServerMetadata;
@@ -45,6 +47,7 @@ export class OAuthProvider {
     private readonly cfg: OAuthProviderConfig,
     discovered: client.Configuration,
   ) {
+    this.adapter = createProviderAdapter(cfg.providerKind);
     this.metadata = discovered.serverMetadata();
     this.issuer = this.metadata.issuer;
     if (!this.metadata.jwks_uri) throw new Error('OAuth provider metadata is missing jwks_uri');
@@ -62,10 +65,6 @@ export class OAuthProvider {
 
   get clientId(): string {
     return this.cfg.clientId;
-  }
-
-  get clientSecret(): string | undefined {
-    return this.cfg.clientSecret;
   }
 
   get issuerUrl(): string {
@@ -93,14 +92,16 @@ export class OAuthProvider {
     return new URL(this.cfg.mcpPath, this.cfg.publicUrl);
   }
 
-  /** Metadata advertised to MCP clients. Uses the real provider by default; Entra can use local compatibility endpoints for Claude. */
+  /** Metadata advertised to MCP clients. Direct mode points at the real provider; compatibility mode points at local adapter endpoints. */
   oauthMetadata(): OAuthMetadata {
+    const registrationEndpoint = this.registrationEndpoint();
+
     if (!this.cfg.compatibilityProxy) {
       return {
         issuer: this.metadata.issuer,
         authorization_endpoint: this.authorizationEndpoint,
         token_endpoint: this.tokenEndpoint,
-        registration_endpoint: this.metadata.registration_endpoint,
+        registration_endpoint: registrationEndpoint,
         response_types_supported: ['code'],
         grant_types_supported: ['authorization_code', 'refresh_token'],
         token_endpoint_auth_methods_supported: ['none'],
@@ -115,7 +116,7 @@ export class OAuthProvider {
       issuer: this.cfg.publicUrl,
       authorization_endpoint: `${this.cfg.publicUrl}/authorize`,
       token_endpoint: `${this.cfg.publicUrl}/token`,
-      registration_endpoint: `${this.cfg.publicUrl}/register`,
+      registration_endpoint: registrationEndpoint,
       jwks_uri: this.metadata.jwks_uri,
       response_types_supported: ['code'],
       grant_types_supported: ['authorization_code', 'refresh_token'],
@@ -132,7 +133,7 @@ export class OAuthProvider {
         audience: this.acceptedAudiences(),
       });
 
-      this.assertAccessToken(payload);
+      this.adapter.assertAccessToken(payload);
 
       const scopes = extractScopes(payload);
       return {
@@ -150,76 +151,48 @@ export class OAuthProvider {
 
   normalizeAuthorizeUrl(incoming: URL): URL {
     const upstream = new URL(this.authorizationEndpoint);
-    incoming.searchParams.delete('resource');
-    this.normalizeScopes(incoming.searchParams);
-    for (const [k, v] of incoming.searchParams) upstream.searchParams.set(k, v);
+    const params = new URLSearchParams(incoming.searchParams);
+    this.adapter.normalizeAuthorizeParams(params, this.adapterConfig());
+    for (const [k, v] of params) upstream.searchParams.set(k, v);
     return upstream;
   }
 
   normalizeTokenParams(params: URLSearchParams): URLSearchParams {
     const next = new URLSearchParams(params);
-    next.delete('resource');
     if (!next.has('client_id')) next.set('client_id', this.cfg.clientId);
     if (this.cfg.clientSecret && !next.has('client_secret'))
       next.set('client_secret', this.cfg.clientSecret);
-    this.normalizeScopes(next);
+    this.adapter.normalizeTokenParams(next, this.adapterConfig());
     return next;
   }
 
-  private normalizeScopes(params: URLSearchParams): void {
-    if (this.cfg.providerKind !== 'entra') return;
-    const rawScope = params.get('scope');
-    if (!rawScope) return;
+  private registrationEndpoint(): string | undefined {
+    if (this.cfg.clientRegistration === 'static') return `${this.cfg.publicUrl}/register`;
+    if (this.cfg.clientRegistration === 'provider') return this.metadata.registration_endpoint;
+    return undefined;
+  }
 
-    // Entra rejects resource indicators and some api:// scope forms.
-    // Standard patterns ({clientId}/.default, api://{clientId}/.default) are always normalised.
-    // Additional aliases (e.g. 'claudeai') are configured via AUTH_SCOPE_ALIASES.
-    const defaultScope = `${this.cfg.clientId}/.default`;
-    const aliasSet = new Set(this.cfg.scopeAliases);
-    const apiPrefix = `api://${this.cfg.clientId}/`;
-
-    params.set(
-      'scope',
-      rawScope
-        .split(' ')
-        .map((scope) => {
-          if (scope === defaultScope || scope === `api://${this.cfg.clientId}/.default`)
-            return defaultScope;
-          if (
-            aliasSet.has(scope) ||
-            (scope.startsWith(apiPrefix) && aliasSet.has(scope.slice(apiPrefix.length)))
-          )
-            return defaultScope;
-          return scope;
-        })
-        .join(' '),
-    );
+  private adapterConfig() {
+    return {
+      clientId: this.cfg.clientId,
+      audience: this.cfg.audience,
+      scopeAliases: this.cfg.scopeAliases,
+    };
   }
 
   private acceptedAudiences(): string[] {
-    const audience = this.cfg.audience || this.cfg.clientId;
-    const audiences = new Set([audience]);
-    if (this.cfg.providerKind === 'entra') {
-      audiences.add(this.cfg.clientId);
-      audiences.add(`api://${this.cfg.clientId}`);
-    }
-    return [...audiences];
+    return [
+      ...new Set([
+        ...this.adapter.acceptedAudiences(this.adapterConfig()),
+        ...this.cfg.acceptedAudiences,
+      ]),
+    ];
   }
 
   private acceptedIssuers(): string[] {
-    if (this.cfg.providerKind !== 'entra') return [this.issuer];
-    const issuerUrl = new URL(this.issuer);
-    const tenantId = issuerUrl.pathname.split('/').filter(Boolean)[0];
-    return tenantId ? [this.issuer, `https://sts.windows.net/${tenantId}/`] : [this.issuer];
-  }
-
-  private assertAccessToken(claims: JWTPayload): void {
-    if (this.cfg.providerKind === 'entra' && !claims.scp && !claims.roles) {
-      throw new Error('token is missing Entra access-token claims (scp or roles)');
-    }
-    if (claims.nonce && !claims.scope && !claims.scp && !claims.roles) {
-      throw new Error('token looks like an ID token, not an access token');
-    }
+    return [
+      ...new Set([...this.adapter.acceptedIssuers(this.issuer), ...this.cfg.acceptedIssuers]),
+    ];
   }
 }
 
@@ -230,7 +203,8 @@ function extractIdentity(claims: JWTPayload): UserIdentity {
     email:
       stringClaim(claims.email) ??
       stringClaim(claims.preferred_username) ??
-      stringClaim(claims.upn),
+      stringClaim(claims.upn) ??
+      stringClaim(claims.username),
     name: stringClaim(claims.name),
   };
 }

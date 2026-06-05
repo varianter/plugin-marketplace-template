@@ -55,19 +55,21 @@ export function createAuthRouter(
     });
   });
 
-  router.post('/register', limiter, express.json({ limit: MAX_TOKEN_BODY_BYTES }), (req, res) => {
-    try {
-      res
-        .status(201)
-        .json(handleRegistration(req.body, provider.clientId, cfg.allowedRedirectOrigins));
-    } catch (err) {
-      if (err instanceof RegistrationError) {
-        res.status(400).json({ error: err.code, error_description: err.message });
-      } else {
-        res.status(400).json({ error: 'invalid_client_metadata' });
+  if (cfg.auth.clientRegistration === 'static') {
+    router.post('/register', limiter, express.json({ limit: MAX_TOKEN_BODY_BYTES }), (req, res) => {
+      try {
+        res
+          .status(201)
+          .json(handleRegistration(req.body, provider.clientId, cfg.allowedRedirectOrigins));
+      } catch (err) {
+        if (err instanceof RegistrationError) {
+          res.status(400).json({ error: err.code, error_description: err.message });
+        } else {
+          res.status(400).json({ error: 'invalid_client_metadata' });
+        }
       }
-    }
-  });
+    });
+  }
 
   if (!cfg.auth.compatibilityProxy) return router;
 

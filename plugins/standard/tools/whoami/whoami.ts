@@ -23,7 +23,7 @@ export function registerWhoami(server: McpServer): void {
         };
       }
 
-      const lines = [];
+      const lines = [`User ID: ${ctx.userId}`];
       if (ctx.email) lines.push(`Email: ${ctx.email}`);
       if (ctx.name) lines.push(`Name: ${ctx.name}`);
       return { content: [{ type: 'text', text: lines.join('\n') }] };

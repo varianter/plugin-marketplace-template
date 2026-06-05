@@ -29,8 +29,9 @@ export function handleRegistration(
 ): Record<string, unknown> {
   const req = RegistrationRequestSchema.parse(body);
 
+  const allowed = allowedOrigins.map(parseAllowedOrigin);
   for (const uri of req.redirect_uris) {
-    if (!allowedOrigins.some((origin) => uri.startsWith(origin))) {
+    if (!isAllowedRedirectUri(uri, allowed)) {
       throw new RegistrationError('invalid_redirect_uri', `redirect_uri not allowed: ${uri}`);
     }
   }
@@ -44,4 +45,52 @@ export function handleRegistration(
     token_endpoint_auth_method: 'none',
     client_id_issued_at: Math.floor(Date.now() / 1000),
   };
+}
+
+interface AllowedOrigin {
+  protocol: string;
+  hostname: string;
+  port: string;
+  origin: string;
+  allowAnyLoopbackPort: boolean;
+}
+
+function isAllowedRedirectUri(uri: string, allowed: AllowedOrigin[]): boolean {
+  let redirect: URL;
+  try {
+    redirect = new URL(uri);
+  } catch {
+    throw new RegistrationError('invalid_redirect_uri', `redirect_uri is not a valid URL: ${uri}`);
+  }
+
+  return allowed.some((origin) => {
+    if (redirect.origin === origin.origin) return true;
+    return (
+      origin.allowAnyLoopbackPort &&
+      redirect.protocol === origin.protocol &&
+      redirect.hostname === origin.hostname
+    );
+  });
+}
+
+function parseAllowedOrigin(origin: string): AllowedOrigin {
+  try {
+    const url = new URL(origin);
+    return {
+      protocol: url.protocol,
+      hostname: url.hostname,
+      port: url.port,
+      origin: url.origin,
+      allowAnyLoopbackPort: !url.port && isLoopbackHost(url.hostname),
+    };
+  } catch {
+    throw new RegistrationError(
+      'invalid_redirect_uri',
+      `allowed origin is not a valid URL: ${origin}`,
+    );
+  }
+}
+
+function isLoopbackHost(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
 }

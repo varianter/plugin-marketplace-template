@@ -104,12 +104,15 @@ async function startConfiguredMcpServer(
         clientId: cfg.auth.clientId,
         clientSecret: cfg.auth.clientSecret || undefined,
         audience: cfg.auth.audience || undefined,
+        acceptedAudiences: cfg.auth.acceptedAudiences,
+        acceptedIssuers: cfg.auth.acceptedIssuers,
         scopes: cfg.auth.scopes,
         scopeAliases: cfg.auth.scopeAliases,
         publicUrl: cfg.publicUrl,
         mcpPath: cfg.mcpPath,
         providerKind: cfg.auth.provider,
         compatibilityProxy: cfg.auth.compatibilityProxy,
+        clientRegistration: cfg.auth.clientRegistration,
       })
     : undefined;
 

@@ -2,6 +2,8 @@
 // Prefer the AUTH_* names for OAuth. AZURE_* names are kept as backwards-compatible
 // aliases for existing Entra deployments.
 
+import type { AuthProviderKind } from '../auth/adapters.js';
+
 export interface Config {
   host: string;
   port: number;
@@ -14,15 +16,21 @@ export interface Config {
   trustProxy: string | number | boolean;
   auth: {
     enabled: boolean;
-    provider: 'oidc' | 'entra';
+    provider: AuthProviderKind;
     issuerUrl: string;
     clientId: string;
     clientSecret: string;
     audience: string;
+    /** Additional JWT audiences to accept, beyond provider defaults. */
+    acceptedAudiences: string[];
+    /** Additional JWT issuers to accept, beyond provider defaults. */
+    acceptedIssuers: string[];
     scopes: string[];
     /** Extra scope names to rewrite to `{clientId}/.default` (Entra compatibility proxy only). */
     scopeAliases: string[];
     compatibilityProxy: boolean;
+    /** `static` exposes local /register returning AUTH_CLIENT_ID for Claude/MCP clients. */
+    clientRegistration: 'none' | 'provider' | 'static';
   };
 }
 
@@ -59,20 +67,18 @@ export function loadConfig(overrides: ConfigOverrides = {}): Config {
     .split(/[ ,]+/)
     .filter(Boolean);
 
-  const scopeAliases = (process.env.AUTH_SCOPE_ALIASES ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const scopeAliases = parseCsv(process.env.AUTH_SCOPE_ALIASES);
+  const compatibilityProxy =
+    process.env.AUTH_COMPATIBILITY_PROXY === 'true' ||
+    process.env.AUTH_COMPATIBILITY_PROXY === '1' ||
+    (provider === 'entra' && process.env.AUTH_COMPATIBILITY_PROXY !== 'false');
 
   const defaultPublicHost = host === '0.0.0.0' ? 'localhost' : host;
 
-  const allowedRedirectOrigins = (
+  const allowedRedirectOrigins = parseCsv(
     process.env.AUTH_ALLOWED_REDIRECT_ORIGINS ??
-    'http://localhost,http://127.0.0.1,https://claude.ai'
-  )
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+      'http://localhost,http://127.0.0.1,https://claude.ai',
+  );
 
   const config: Config = {
     host,
@@ -95,12 +101,15 @@ export function loadConfig(overrides: ConfigOverrides = {}): Config {
       clientId,
       clientSecret,
       audience: process.env.AUTH_AUDIENCE ?? process.env.OAUTH_AUDIENCE ?? '',
+      acceptedAudiences: parseCsv(process.env.AUTH_ACCEPTED_AUDIENCES),
+      acceptedIssuers: parseCsv(process.env.AUTH_ACCEPTED_ISSUERS),
       scopes,
       scopeAliases,
-      compatibilityProxy:
-        process.env.AUTH_COMPATIBILITY_PROXY === 'true' ||
-        process.env.AUTH_COMPATIBILITY_PROXY === '1' ||
-        (provider === 'entra' && process.env.AUTH_COMPATIBILITY_PROXY !== 'false'),
+      compatibilityProxy,
+      clientRegistration: parseClientRegistration(
+        process.env.AUTH_CLIENT_REGISTRATION,
+        compatibilityProxy,
+      ),
     },
   };
 
@@ -131,12 +140,41 @@ function parseTrustProxy(raw: string | undefined): string | number | boolean {
   return raw;
 }
 
-function parseProvider(raw: string): 'oidc' | 'entra' {
-  if (raw === 'oidc' || raw === 'entra') return raw;
-  throw new Error(`invalid AUTH_PROVIDER "${raw}": expected "oidc" or "entra"`);
+function parseProvider(raw: string): AuthProviderKind {
+  const normalized = raw === 'generic' ? 'generic-oidc' : raw;
+  if (
+    normalized === 'generic-oidc' ||
+    normalized === 'oidc' ||
+    normalized === 'entra' ||
+    normalized === 'auth0' ||
+    normalized === 'okta' ||
+    normalized === 'keycloak' ||
+    normalized === 'cognito' ||
+    normalized === 'zitadel'
+  )
+    return normalized;
+  throw new Error(
+    `invalid AUTH_PROVIDER "${raw}": expected generic-oidc, oidc, entra, auth0, okta, keycloak, cognito, or zitadel`,
+  );
 }
 
-function defaultScopes(clientId: string, provider: 'oidc' | 'entra'): string {
+function parseClientRegistration(
+  raw: string | undefined,
+  compatibilityProxy: boolean,
+): 'none' | 'provider' | 'static' {
+  if (!raw) return compatibilityProxy ? 'static' : 'provider';
+  if (raw === 'none' || raw === 'provider' || raw === 'static') return raw;
+  throw new Error(`invalid AUTH_CLIENT_REGISTRATION "${raw}": expected none, provider, or static`);
+}
+
+function parseCsv(raw: string | undefined): string[] {
+  return (raw ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function defaultScopes(clientId: string, provider: AuthProviderKind): string {
   if (provider === 'entra' && clientId) return `openid ${clientId}/.default offline_access`;
   return 'openid profile email offline_access';
 }
