@@ -19,6 +19,7 @@ RUN corepack enable
 RUN addgroup -S mcp && adduser -S mcp -G mcp
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY .claude-plugin/ ./.claude-plugin/
 RUN pnpm install --frozen-lockfile --prod
 COPY --from=builder /build/mcp/dist ./dist
 USER mcp

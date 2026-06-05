@@ -1,9 +1,14 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import type { JWTPayload } from 'jose';
 
 export interface RequestContext {
-  email: string;
+  /** Stable provider-scoped user id: `${issuer}#${subject}`. */
+  userId: string;
+  email?: string;
   name?: string;
-  /** Raw Bearer token — use for on-behalf-of API calls to Entra-protected services. */
+  scopes: string[];
+  claims: JWTPayload;
+  /** Raw Bearer token — use only for APIs that accept this exact audience. */
   token: string;
 }
 

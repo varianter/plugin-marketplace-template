@@ -1,70 +1,86 @@
-# Azure Entra ID — OAuth Setup
+# Microsoft Entra ID — OAuth Setup
 
-The Entra ID app registration (`mcp-gateway-prod`) is managed as code in the
-[infrastructure-as-code](https://github.com/varianter/infrastructure-as-code) repo at
-`environments/prod/cluster/mcp-oauth.tf`. **Do not create a new app registration.**
+This guide explains how to configure an Entra ID app registration for MCP server authentication
+via the compatibility proxy (`AUTH_COMPATIBILITY_PROXY=true`, the default for `AUTH_PROVIDER=entra`).
+
+## App registration
+
+1. Go to **Azure Portal → Microsoft Entra ID → App registrations → New registration**.
+2. Name it (e.g. `my-mcp-server`), select **Single tenant** (or multi-tenant if needed).
+3. Under **Authentication**, add a platform — select **Web** and add the redirect URIs for your MCP clients:
+   - Local dev: `http://localhost:3000/oauth/callback` (or whichever port your MCP client uses)
+   - Claude.ai: `https://claude.ai/api/mcp/auth_callback`
+4. Enable **Allow public client flows** if your MCP client uses PKCE without a client secret.
+
+## Configure an OAuth scope
+
+1. Go to **Expose an API → Add a scope**.
+2. Set **Application ID URI** to `api://<client-id>` (Entra will suggest this).
+3. Add a scope — e.g. `claudeai`. Note this value for `AUTH_SCOPE_ALIASES` below.
 
 ## Key values
 
-| Property | Value |
-|----------|-------|
-| App name | `mcp-gateway-prod` |
-| Client ID | `7e6a0973-ab32-4912-a497-965fc4544f89` |
-| Tenant ID | `0f16d077-bd82-4a6c-b498-52741239205f` |
-| OAuth scope | `claudeai` |
-| Redirect URI | `https://claude.ai/api/mcp/auth_callback` |
-| Auth method | Public client (PKCE, no client secret) |
-| Email claim | Optional claim on access token — already configured |
+After registration, record:
 
-## How auth works
+| Setting | Where to find it |
+|---------|-----------------|
+| **Client ID** | App registration → Overview → Application (client) ID |
+| **Tenant ID** | App registration → Overview → Directory (tenant) ID |
+| **Client secret** | App registration → Certificates & secrets → New client secret (leave blank for public client) |
 
-```
-Claude.ai                MCP server              Entra ID
-    |                        |                       |
-    |-- GET /.well-known/ -> |                       |
-    |<-- { authorization_endpoint, registration_endpoint, scope: claudeai } --
-    |                        |                       |
-    |-- POST /register ----> |                       |
-    |<-- { client_id: 7e6a0973-... } ---------------
-    |                        |                       |
-    | (open browser)         |                       |
-    |-- GET /oauth2/v2.0/authorize?scope=claudeai offline_access&code_challenge=... -->
-    |<-- redirect with auth code -------------------|
-    |                        |                       |
-    |-- POST /oauth2/v2.0/token (code + code_verifier) --->
-    |<-- { access_token, refresh_token } -----------|
-    |                        |                       |
-    |-- POST /mcp Bearer <token> -> |               |
-    |                        |-- verifyEntraToken -->|
-    |                        |<-- { email, name } ---|
-    |<-- MCP response -------|                       |
+## Environment variables
+
+```env
+AUTH_PROVIDER=entra
+AUTH_ISSUER_URL=https://login.microsoftonline.com/<tenant-id>/v2.0
+AUTH_CLIENT_ID=<client-id>
+# AUTH_CLIENT_SECRET=<secret>   # omit for public client / PKCE
+AUTH_SCOPES=openid <client-id>/.default offline_access
+AUTH_COMPATIBILITY_PROXY=true
+
+# If you created a custom scope (e.g. "claudeai"), add it here so the proxy rewrites it:
+AUTH_SCOPE_ALIASES=claudeai
 ```
 
-When the access token expires (~1 hour), Claude.ai silently exchanges the `refresh_token`
-for a new one and retries — the `mcp-session-id` stays valid, no re-login needed.
-
-## Key Vault secrets
-
-The Key Vault `kv-workloads-prod-ne` already holds these secrets (created by Terraform):
-
-| Secret name | Content | Used by |
-|-------------|---------|---------|
-| `mcp-gateway-client-id` | `7e6a0973-ab32-4912-a497-965fc4544f89` | oauth2-proxy, mcp-internal |
-| `mcp-gateway-client-secret` | app password | oauth2-proxy only |
-| `mcp-oauth2proxy-cookie-secret` | session cookie key | oauth2-proxy only |
-
-All four secrets are managed by `mcp-oauth.tf` and are already in Key Vault.
-
-## Local development
-
-With `KEYVAULT_URL` set and `az login` done, the server reads both IDs from Key Vault automatically:
+## How the auth flow works
 
 ```
-# .env — only these three are needed locally; client/tenant IDs come from Key Vault
-HOST=127.0.0.1
-PORT=8080
-KEYVAULT_URL=https://kv-workloads-prod-ne.vault.azure.net/
+MCP client              MCP server              Entra ID
+    |                       |                      |
+    |-- GET /.well-known/ ->|                      |
+    |<-- { authorization_endpoint, scopes } -------|
+    |                       |                      |
+    |-- POST /register ---->|                      |
+    |<-- { client_id } -----|                      |
+    |                       |                      |
+    | (open browser)        |                      |
+    |-- GET /authorize? --->|                      |
+    |   (scope normalised)  |-- redirect --------->|
+    |<-- auth code ---------|<-- redirect ----------|
+    |                       |                      |
+    |-- POST /token ------->|                      |
+    |   (params proxied)    |-- POST /token ------->|
+    |<-- { access_token } --|<-- { access_token } --|
+    |                       |                      |
+    |-- POST /mcp Bearer -->|                      |
+    |                       |-- verifyToken ------->|
+    |<-- MCP response ------|                      |
 ```
 
-In k8s, `AZURE_CLIENT_ID` and `AZURE_TENANT_ID` are injected as env vars from `values.yaml`
-and take precedence over Key Vault.
+When using the compatibility proxy, the MCP server acts as a transparent OAuth relay:
+`/authorize` normalises scopes and redirects to Entra, `/token` proxies the exchange,
+and `/register` returns the pre-configured `AUTH_CLIENT_ID`.
+
+The access token is verified locally via JWKS — no additional Entra round-trip per request.
+
+## Scope normalisation
+
+Entra rejects certain scope forms that MCP clients may send. The compatibility proxy automatically
+rewrites these before forwarding:
+
+| Incoming scope | Rewritten to |
+|---------------|-------------|
+| `<client-id>/.default` | `<client-id>/.default` (unchanged) |
+| `api://<client-id>/.default` | `<client-id>/.default` |
+| Any value in `AUTH_SCOPE_ALIASES` (e.g. `claudeai`) | `<client-id>/.default` |
+| `api://<client-id>/<alias>` (e.g. `api://.../claudeai`) | `<client-id>/.default` |
