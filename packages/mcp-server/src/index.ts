@@ -1,4 +1,6 @@
+import type { Server } from 'node:http';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
@@ -6,41 +8,96 @@ import helmet from 'helmet';
 import { attachRequestContext } from './auth/middleware.js';
 import { OAuthProvider } from './auth/provider.js';
 import { bearerResourceMetadataUrl, createAuthRouter } from './auth/routes.js';
-import { loadConfig } from './config/config.js';
-import { loadServerMetadata } from './config/metadata.js';
+import { type Config, type ConfigOverrides, loadConfig } from './config/config.js';
+import { loadServerMetadata, type ServerMetadata } from './config/metadata.js';
 import { log } from './log.js';
 import { createMcpRouter, type McpServer } from './mcpEndpoint.js';
 
-export type { McpServer };
 export type { RequestContext } from './auth/context.js';
-export type { ServerMetadata } from './config/metadata.js';
-export type { Config } from './config/config.js';
 export { getRequestContext } from './auth/context.js';
+export type { Config, ConfigOverrides } from './config/config.js';
+export { loadConfig } from './config/config.js';
+export type { ServerMetadata } from './config/metadata.js';
+export { loadServerMetadata } from './config/metadata.js';
 export { log } from './log.js';
 export { injectExtApps } from './widgets.js';
+export type { McpServer };
 
-export interface McpServerOptions {
-  /** Called once per MCP session to register tools on the new McpServer instance. */
-  registerTools: (server: McpServer) => void;
-  /**
-   * Absolute path to the directory containing `assets/icon.png`.
-   * Defaults to the `assets/` directory co-located with this package's index.js.
-   */
+export interface McpServerConfig {
+  runtime: Config;
+  metadata: ServerMetadata;
+  /** Absolute path to the directory containing `icon.png`. */
+  assetsDir: string;
+}
+
+export interface PluginMcpServerConfigOptions {
+  /** The plugin entry module URL (`import.meta.url`). Used to derive conventional paths. */
+  importMetaUrl: string;
+  /** Runtime config overrides. Environment variables remain the defaults. */
+  runtime?: ConfigOverrides;
+  /** Override loaded server metadata. */
+  metadata?: Partial<ServerMetadata>;
+  /** Override the default `assets/` directory next to the plugin entry point. */
   assetsDir?: string;
-  /**
-   * Directory where `.claude-plugin/plugin.json` is located.
-   * Defaults to `process.cwd()`. Useful when the plugin manifest lives at a
-   * known path relative to the compiled entry point.
-   */
+  /** Override the default plugin root two directories above the plugin entry point. */
   manifestDir?: string;
 }
 
-export async function startMcpServer(options: McpServerOptions): Promise<void> {
-  const { registerTools, assetsDir, manifestDir } = options;
-  const resolvedAssetsDir = assetsDir ?? join(import.meta.dirname, 'assets');
+export interface McpServerOptions extends PluginMcpServerConfigOptions {
+  /** Called once per MCP session to register tools on the new McpServer instance. */
+  registerTools: (server: McpServer) => void;
+}
 
-  const cfg = loadConfig();
+/**
+ * Read conventional plugin configuration without starting a server:
+ * - dev:  plugins/<plugin>/mcp/src/index.ts
+ * - prod: /app/mcp/src/index.js
+ * - assets: mcp/src/assets/icon.png
+ * - manifest: <plugin-root>/.claude-plugin/plugin.json
+ */
+export function readPluginMcpServerConfig(options: PluginMcpServerConfigOptions): McpServerConfig {
+  const entryDir = fileURLToPath(new URL('.', options.importMetaUrl));
+  const manifestDir = options.manifestDir ?? join(entryDir, '../..');
   const metadata = loadServerMetadata(manifestDir);
+
+  return {
+    runtime: loadConfig(options.runtime),
+    metadata: { ...metadata, ...options.metadata },
+    assetsDir: options.assetsDir ?? join(entryDir, 'assets'),
+  };
+}
+
+/** Create and start an MCP HTTP server from explicit config. */
+export function startPluginMcpServer(
+  config: McpServerConfig,
+  registerTools: (server: McpServer) => void,
+): Promise<void> {
+  return createAndStartMcpServer(config, registerTools);
+}
+
+export async function createAndStartMcpServer(
+  config: McpServerConfig,
+  registerTools: (server: McpServer) => void,
+): Promise<void> {
+  try {
+    await startConfiguredMcpServer(config, registerTools);
+  } catch (err) {
+    logStartupError(err);
+  }
+}
+
+export function logStartupError(err: unknown): never {
+  process.stderr.write(
+    `${JSON.stringify({ level: 'error', msg: 'startup failed', error: String(err) })}\n`,
+  );
+  process.exit(1);
+}
+
+async function startConfiguredMcpServer(
+  config: McpServerConfig,
+  registerTools: (server: McpServer) => void,
+): Promise<void> {
+  const { runtime: cfg, metadata, assetsDir: resolvedAssetsDir } = config;
   const provider = cfg.auth.enabled
     ? await OAuthProvider.create({
         issuerUrl: cfg.auth.issuerUrl,
@@ -110,13 +167,18 @@ export async function startMcpServer(options: McpServerOptions): Promise<void> {
   );
   app.use(errorHandler);
 
-  const httpServer = app.listen(cfg.port, cfg.host, () => {
-    log('info', 'server started', {
-      addr: `${cfg.host}:${cfg.port}`,
-      publicUrl: cfg.publicUrl,
-      mcp: cfg.mcpPath,
-      auth: provider ? cfg.auth.provider : 'disabled',
+  const httpServer = await new Promise<Server>((resolve, reject) => {
+    const server = app.listen(cfg.port, cfg.host, () => {
+      server.off('error', reject);
+      log('info', 'server started', {
+        addr: `${cfg.host}:${cfg.port}`,
+        publicUrl: cfg.publicUrl,
+        mcp: cfg.mcpPath,
+        auth: provider ? cfg.auth.provider : 'disabled',
+      });
+      resolve(server);
     });
+    server.once('error', reject);
   });
 
   const stop = (): void => {

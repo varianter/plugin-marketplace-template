@@ -26,7 +26,11 @@ export interface Config {
   };
 }
 
-export function loadConfig(): Config {
+export type ConfigOverrides = Partial<Omit<Config, 'auth'>> & {
+  auth?: Partial<Config['auth']>;
+};
+
+export function loadConfig(overrides: ConfigOverrides = {}): Config {
   const host = process.env.HOST ?? '0.0.0.0';
   const port = parsePort(process.env.PORT);
   const mcpPath = process.env.MCP_PATH ?? '/mcp';
@@ -70,7 +74,7 @@ export function loadConfig(): Config {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  return {
+  const config: Config = {
     host,
     port,
     mcpPath,
@@ -99,6 +103,8 @@ export function loadConfig(): Config {
         (provider === 'entra' && process.env.AUTH_COMPATIBILITY_PROXY !== 'false'),
     },
   };
+
+  return { ...config, ...overrides, auth: { ...config.auth, ...overrides.auth } };
 }
 
 function parsePort(rawPort: string | undefined): number {
