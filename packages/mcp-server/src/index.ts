@@ -24,6 +24,8 @@ export { loadConfig } from './config/config.js';
 export type { ServerMetadata } from './config/metadata.js';
 export { loadServerMetadata } from './config/metadata.js';
 export { log } from './log.js';
+export type { RegisterLocalPluginToolsOptions } from './registerLocalPluginTools.js';
+export { registerLocalPluginTools } from './registerLocalPluginTools.js';
 export { injectExtApps } from './widgets.js';
 export type { McpServer };
 
@@ -47,9 +49,11 @@ export interface PluginMcpServerConfigOptions {
   manifestDir?: string;
 }
 
+export type RegisterTools = (server: McpServer) => void | Promise<void>;
+
 export interface McpServerOptions extends PluginMcpServerConfigOptions {
   /** Called once per MCP session to register tools on the new McpServer instance. */
-  registerTools: (server: McpServer) => void;
+  registerTools: RegisterTools;
 }
 
 /**
@@ -74,14 +78,14 @@ export function readPluginMcpServerConfig(options: PluginMcpServerConfigOptions)
 /** Create and start an MCP HTTP server from explicit config. */
 export function startPluginMcpServer(
   config: McpServerConfig,
-  registerTools: (server: McpServer) => void,
+  registerTools: RegisterTools,
 ): Promise<void> {
   return createAndStartMcpServer(config, registerTools);
 }
 
 export async function createAndStartMcpServer(
   config: McpServerConfig,
-  registerTools: (server: McpServer) => void,
+  registerTools: RegisterTools,
 ): Promise<void> {
   try {
     await startConfiguredMcpServer(config, registerTools);
@@ -99,7 +103,7 @@ export function logStartupError(err: unknown): never {
 
 async function startConfiguredMcpServer(
   config: McpServerConfig,
-  registerTools: (server: McpServer) => void,
+  registerTools: RegisterTools,
 ): Promise<void> {
   const { runtime: cfg, metadata, assetsDir: resolvedAssetsDir } = config;
   const provider = cfg.auth.enabled

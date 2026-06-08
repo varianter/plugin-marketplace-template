@@ -78,7 +78,7 @@ cd scripts && bun run validate.ts ../plugins/standard/skills/my-skill
 
 ## Adding an MCP tool
 
-Create `plugins/standard/tools/<name>/<toolName>.ts` and register it in `plugins/standard/mcp/src/registerTools.ts`:
+Create `plugins/standard/tools/<name>/<toolName>.ts`; files exporting `register*` functions are auto-discovered:
 
 ```typescript
 import type { McpServer } from '@variant/mcp-server';

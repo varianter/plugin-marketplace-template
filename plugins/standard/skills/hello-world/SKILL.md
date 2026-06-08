@@ -25,7 +25,7 @@ Use this skill when the user asks for:
 2. Call the `hello-world-widget` MCP tool with the provided values.
 3. Explain that the widget is intentionally simple and exists to show the technical wiring:
    - skill instructions in `SKILL.md`
-   - tool registration in `mcp/src/registerTools.ts`
+   - auto-discovered tool registration via exported `register*` functions
    - colocated tool and widget files under this skill's `mcp/` directory
 
 ```ts

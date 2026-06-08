@@ -1,12 +1,6 @@
 import type { McpServer } from '@variant/mcp-server';
-import { registerHelloWorld } from '../../skills/hello-world/mcp/helloWorld/helloWorld.js';
-import { registerWhoami } from '../../tools/whoami/whoami.js';
+import { registerLocalPluginTools } from '@variant/mcp-server';
 
-export function registerTools(server: McpServer): void {
-  registerWhoami(server);
-  registerHelloWorld(server);
-  // Register skill-colocated MCP tools here.
-  // Example:
-  //   import { registerMyTool } from '../../skills/my-skill/mcp/myTool.js';
-  //   registerMyTool(server);
+export function registerTools(server: McpServer): Promise<void> {
+  return registerLocalPluginTools(server, import.meta.url);
 }

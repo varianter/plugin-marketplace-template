@@ -57,12 +57,12 @@ With widget — colocated directory:
 2. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
 3. The build script auto-discovers any `skills/*/mcp/*/index.html` — no extra wiring needed
 
-Register skill-colocated tools in `plugins/<plugin>/mcp/src/registerTools.ts`.
+Skill-colocated tools are auto-discovered from `plugins/<plugin>/skills/*/mcp/` when they export a `register*` function.
 
 **Standalone tool** (not tied to a skill):
 
 1. Create `plugins/<plugin>/tools/<toolName>/<toolName>.ts` with the same pattern
-2. Register it in `plugins/<plugin>/mcp/src/registerTools.ts`
+2. Export a `register<ToolName>(server: McpServer): void` function; it is auto-discovered
 
 **Error handling:** Return tool-level errors as `{ content: [{ type: 'text', text: 'Error: ...' }], isError: true }`. Throw only for unexpected infrastructure failures.
 

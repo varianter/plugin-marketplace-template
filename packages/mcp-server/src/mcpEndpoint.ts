@@ -7,6 +7,7 @@ import type { ServerMetadata } from './config/metadata.js';
 import { log } from './log.js';
 
 export { McpServer };
+export type RegisterTools = (server: McpServer) => void | Promise<void>;
 
 const MAX_BODY_BYTES = '50mb';
 
@@ -16,7 +17,7 @@ export interface McpRouterOptions {
   maxSessions: number;
   signal: AbortSignal;
   /** Called once per MCP session to register tools on the new McpServer instance. */
-  registerTools: (server: McpServer) => void;
+  registerTools: RegisterTools;
 }
 
 export function createMcpRouter(opts: McpRouterOptions): express.Router {
@@ -78,12 +79,12 @@ async function handleMcp(
     }
   };
 
-  const server = buildServer(opts);
+  const server = await buildServer(opts);
   await server.connect(transport);
   await transport.handleRequest(req, res, req.body);
 }
 
-function buildServer(opts: McpRouterOptions): McpServer {
+async function buildServer(opts: McpRouterOptions): Promise<McpServer> {
   const server = new McpServer({
     name: opts.metadata.name,
     title: opts.metadata.title,
@@ -92,6 +93,6 @@ function buildServer(opts: McpRouterOptions): McpServer {
     icons: [{ src: opts.iconUrl, mimeType: 'image/png' }],
     ...(opts.metadata.websiteUrl && { websiteUrl: opts.metadata.websiteUrl }),
   });
-  opts.registerTools(server);
+  await opts.registerTools(server);
   return server;
 }
