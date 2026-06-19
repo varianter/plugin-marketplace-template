@@ -54,10 +54,7 @@ function createWidgetResourceResult(resource: WidgetResourceDefinition, html: st
   };
 }
 
-function registerWidgetResource(
-  server: McpServer,
-  resource: WidgetResourceDefinition,
-): void {
+function registerWidgetResource(server: McpServer, resource: WidgetResourceDefinition): void {
   registerAppResource(server, resource.title, resource.uri, resource.config ?? {}, async () =>
     createWidgetResourceResult(resource, loadWidgetHtml(resource.widgetName)),
   );
