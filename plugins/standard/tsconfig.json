@@ -17,5 +17,5 @@
     "skills/*/mcp/**/*",
     "tools/**/*"
   ],
-  "exclude": ["node_modules", "mcp/dist"]
+  "exclude": ["node_modules", "mcp/dist", "**/*.test.ts"]
 }

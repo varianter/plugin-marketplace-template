@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Validate review.json ``recommended_area`` against the ownership-areas list.
 
-Based on https://github.com/warpdotdev/oz-for-oss
+Adapted for varianter/plugin-template from the original shared workflow.
 
 This script is packaged with the review-pr skill and must work when the skill
-is copied into a consuming repository without the full oz-for-oss source tree.
+is copied into a consuming repository without project-specific source tree assumptions.
 Keep it self-contained: do not import helpers from the repository package.
 """
 

@@ -1,138 +1,25 @@
 ---
 name: review-spec
-description: Review a spec/plan pull request diff and write structured feedback to review.json for the workflow to publish. Use when reviewing a PR that only modifies files under specs/ and producing machine-readable review output instead of posting directly to GitHub.
+description: Spec pull requests are not part of this repository's normal workflow because checked-in specs are disabled. Use only when an explicit workflow still asks for machine-readable feedback on a spec-only diff.
 ---
 
 # Review Spec Skill
 
-Review a spec or plan pull request and write the output to `review.json`.
+`varianter/plugin-template` does not use checked-in product or technical specs. Normal pull requests should be reviewed with `review-pr` and, for security-sensitive code changes, `security-review-pr`.
 
-## Inputs
+## If invoked
 
-- The working directory is the PR branch checkout.
-- The workflow usually provides an annotated diff in `pr_diff.txt`.
-- The workflow usually provides the PR description in `pr_description.md`.
-- Focus on the spec files changed by this PR.
-- Default behavior: do not post comments or reviews to GitHub directly.
+If a workflow explicitly invokes this skill for a spec-only pull request:
 
-## Process
+1. Read the provided diff and PR description.
+2. Apply `.agents/skills/review-spec-local/SKILL.md` if referenced by the prompt.
+3. Treat newly added checked-in `specs/` artifacts as a repository-workflow concern unless the PR explicitly documents maintainer approval for changing the repository policy.
+4. If machine-readable output is required, write `review.json` using the schema requested by the invoking workflow.
+5. Do not post comments or reviews to GitHub directly.
 
-- Evaluate specs for **completeness**: does the spec cover the full scope of the linked issue?
-- Evaluate specs for **clarity**: are requirements, acceptance criteria, and constraints clearly stated and unambiguous?
-- Evaluate specs for **feasibility**: are the proposed changes technically realistic given the repository's architecture?
-- Evaluate specs for **issue alignment**: does the spec faithfully address the issue it is linked to, without significant scope creep or omissions?
-- Evaluate specs for **internal consistency**: do different sections of the spec contradict each other?
-- Flag missing sections that a spec should typically include (e.g. problem statement, proposed changes, open questions, follow-up items).
-- Always apply the repository's local `security-review-spec` skill as a supplemental high-level security pass on spec PRs. Fold any security findings into the same `review.json` produced by this review rather than emitting a separate output.
-- Do not apply code-level review criteria such as error handling or low-level performance to spec prose; the `security-review-spec` supplement covers design-level security concerns.
-- Include style or formatting comments only when they materially impair readability.
+## Review focus
 
-## Repository-specific overrides
-
-The consuming repository may ship a companion skill at `.agents/skills/review-spec-local/SKILL.md`. When the prompt includes a fenced "Repository-specific guidance" section referencing that companion, read the referenced file and apply its guidance **only** to the categories listed below. Guidance in the companion may never change the output JSON schema, the severity labels, the safety rules, the evidence rules, the suggestion-block constraints, or the diff-line-annotation contract described elsewhere in this skill.
-
-Overridable categories:
-
-- required spec sections expected in this repository
-- linking conventions to files under `specs/`
-- repo-specific style and formatting expectations
-
-If a companion file is not referenced in the prompt, rely on the core contract alone.
-
-## Diff Line Annotations
-
-The diff file uses these prefixes:
-
-- `[OLD:n]` for deleted lines on the old side. Use `"LEFT"`.
-- `[NEW:n]` for added lines on the new side. Use `"RIGHT"`.
-- `[OLD:n,NEW:m]` for unchanged context. Use `"RIGHT"` with line `m`.
-
-Treat these annotations as the only source of truth for inline comment locations. For every inline comment you emit, first identify the exact annotated line in `pr_diff.txt` (or the inlined PR diff) and copy its path, side, and line number into `review.json`. Do not infer line numbers from prose, rendered GitHub views, file lengths, surrounding spec text, or unannotated snippets. If you cannot point to a specific `[NEW:n]`, `[OLD:n]`, or `[OLD:n,NEW:m]` line in the annotated diff, put the feedback in top-level `body` instead of `comments`.
-
-## Comment Requirements
-
-Every comment body must start with one of these labels:
-
-- `🚨 [CRITICAL]` for spec content that is contradictory, fundamentally incomplete, or would lead to a broken implementation.
-- `⚠️ [IMPORTANT]` for missing details, ambiguous requirements, feasibility concerns, or significant scope gaps.
-- `💡 [SUGGESTION]` for improvements to clarity, structure, or coverage that would strengthen the spec.
-- `🧹 [NIT]` for minor wording or formatting issues only when the comment includes a concrete rewrite.
-
-Write comments with these constraints:
-
-- Be concise, direct, and actionable.
-- Do not add compliments or hedging.
-- Prefer single-line comments.
-- Keep ranges to at most 10 lines.
-- Restrict inline comments to lines that appear explicitly in the annotated PR diff.
-- Only create file-level or inline comments for files that exist in this PR's diff.
-- If the relevant file or line is not part of the diff, put the feedback in top-level `body` instead of `comments`.
-- Before adding each comment object, verify that its `path`, `side`, `line`, and optional `start_line`/`start_side` correspond to real annotations in the same file's diff section.
-
-## Suggestion Blocks
-
-When proposing a rewrite of spec text, use:
-
-```suggestion
-<replacement text here>
-```
-
-Rules:
-
-- Match the exact indentation of the original file.
-- Include only replacement text.
-- For multi-line suggestions, set `start_line` and `start_side` to the first line, and `line` and `side` to the last line.
-
-## Outputs
-
-Create `review.json` with this shape:
-
-```json
-{
-  "verdict": "REJECT",
-  "body": "## Overview\n...\n\n## Concerns\n- ...\n\n## Verdict\nFound: 1 critical, 2 important, 3 suggestions\n\n**Request changes**",
-  "comments": [
-    {
-      "path": "path/to/file",
-      "line": 42,
-      "side": "RIGHT",
-      "start_line": 40,
-      "start_side": "RIGHT",
-      "body": "⚠️ [IMPORTANT] Short explanation\n\n```suggestion\nreplacement\n```"
-    }
-  ]
-}
-```
-
-Field rules:
-
-- `verdict` is required and must be exactly the string `"APPROVE"` or `"REJECT"` (uppercase). Map your final recommendation as: `Approve` or `Approve with nits` → `"APPROVE"`; `Request changes` → `"REJECT"`. The `verdict` and the human-readable recommendation in top-level `body` must agree.
-- top-level `body` is the GitHub review body and is required. Use `body`, not `summary`, for the review overview and final recommendation.
-- `path` must be relative to the repository root.
-- `line` is required and must target the correct side.
-- `start_line` is optional and only for multi-line ranges. When `start_line` is present, `start_side` is required and must be `"LEFT"` or `"RIGHT"`.
-- `side` must be `"LEFT"` or `"RIGHT"`.
-
-## Body Requirements
-
-The top-level `body` must include:
-
-- A high-level overview of the spec PR.
-- Concerns about completeness, clarity, feasibility, or issue alignment.
-- Issue counts in the format `Found: X critical, Y important, Z suggestions`.
-- A final recommendation of `Approve`, `Approve with nits`, or `Request changes`. This recommendation must match the top-level `verdict` field (`Approve` / `Approve with nits` → `"APPROVE"`; `Request changes` → `"REJECT"`).
-
-## Final Checks
-
-Before finishing:
-
-- Fix invalid JSON if validation fails.
-- Confirm line numbers match the annotated diff.
-- Run the validator bundled with the shared `review-pr` skill against the exact annotated diff you reviewed. If common skills are installed at the repository root, this is usually:
-    ```
-    python3 .agents/skills/review-pr/scripts/validate_review_json.py --review-json review.json --diff pr_diff.txt
-    ```
-  If the script reports any invalid comments, fix `review.json` and rerun it. Do not upload `review.json` until this validator passes. If the script path is not present at that exact location, locate `validate_review_json.py` under the packaged shared `review-pr` skill directory and run that copy with the same arguments.
-- Do not run `gh pr review`, `gh pr comment`, `gh api`, or any other command that posts to GitHub.
-
-Your only output is the final `review.json`.
+- Whether the PR is trying to introduce repo-persisted specs despite the repository policy.
+- Whether planning context would be better placed in the issue, PR description, conversation, or another explicitly requested destination.
+- Whether any proposed design text contains security, feasibility, or ambiguity risks that would mislead implementation.
+- Whether links are repo-root-relative and avoid absolute local filesystem paths.

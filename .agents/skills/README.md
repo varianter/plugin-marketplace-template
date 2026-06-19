@@ -1,3 +1,5 @@
 # Skills
 
-Many of the skills here are based on https://github.com/warpdotdev/oz-for-oss.
+Repository-local agent skills for `varianter/plugin-template`.
+
+This repository does not use checked-in `specs/` artifacts or file-based spec-driven development. Planning context should stay in issues, pull request descriptions, conversations, or another explicitly requested destination.

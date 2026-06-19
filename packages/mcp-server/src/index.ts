@@ -57,6 +57,11 @@ export interface McpServerOptions extends PluginMcpServerConfigOptions {
   registerTools: RegisterTools;
 }
 
+export interface McpExpressAppOptions {
+  /** Abort signal used to close active MCP transports. */
+  signal?: AbortSignal;
+}
+
 /**
  * Read conventional plugin configuration without starting a server:
  * - dev:  plugins/<plugin>/mcp/index.ts with cwd `plugins/<plugin>`
@@ -97,10 +102,11 @@ function logStartupError(err: unknown): never {
   process.exit(1);
 }
 
-async function startConfiguredMcpServer(
+export async function createMcpExpressApp(
   config: McpServerConfig,
   registerTools: RegisterTools,
-): Promise<void> {
+  options: McpExpressAppOptions = {},
+): Promise<express.Express> {
   const { runtime: cfg, metadata, assetsDir: resolvedAssetsDir } = config;
   const provider = cfg.auth.enabled
     ? await OAuthProvider.create({
@@ -157,19 +163,28 @@ async function startConfiguredMcpServer(
     );
   }
 
-  const shutdown = new AbortController();
-
   app.use(
     cfg.mcpPath,
     createMcpRouter({
       iconUrl: `${cfg.publicUrl}/icon.png`,
       metadata,
       maxSessions: cfg.mcpMaxSessions,
-      signal: shutdown.signal,
+      signal: options.signal ?? new AbortController().signal,
       registerTools,
     }),
   );
   app.use(errorHandler);
+
+  return app;
+}
+
+async function startConfiguredMcpServer(
+  config: McpServerConfig,
+  registerTools: RegisterTools,
+): Promise<void> {
+  const { runtime: cfg } = config;
+  const shutdown = new AbortController();
+  const app = await createMcpExpressApp(config, registerTools, { signal: shutdown.signal });
 
   const httpServer = await new Promise<Server>((resolve, reject) => {
     const server = app.listen(cfg.port, cfg.host, () => {
@@ -178,7 +193,7 @@ async function startConfiguredMcpServer(
         addr: `${cfg.host}:${cfg.port}`,
         publicUrl: cfg.publicUrl,
         mcp: cfg.mcpPath,
-        auth: provider ? cfg.auth.provider : 'disabled',
+        auth: cfg.auth.enabled ? cfg.auth.provider : 'disabled',
       });
       resolve(server);
     });

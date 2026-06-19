@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 
-DEFAULT_REPO = "warpdotdev/oz-for-oss"
+DEFAULT_REPO = "varianter/plugin-template"
 
 
 def _gh_api(args: list[str]) -> Any:

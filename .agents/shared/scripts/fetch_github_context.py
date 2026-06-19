@@ -1,6 +1,6 @@
-"""Fetch GitHub issue/PR context on demand for Oz implementation agents.
+"""Fetch GitHub issue/PR context on demand for implementation agents.
 
-Based on https://github.com/warpdotdev/oz-for-oss
+Adapted for varianter/plugin-template from the original shared workflow.
 
 This script is the supported way for an agent to retrieve
 the body, comments, diff, and review threads of the issue or pull request it
@@ -113,7 +113,7 @@ def _gh_request(
     req.add_header("Authorization", f"Bearer {token}")
     req.add_header("Accept", accept)
     req.add_header("X-GitHub-Api-Version", "2022-11-28")
-    req.add_header("User-Agent", "oz-fetch-github-context")
+    req.add_header("User-Agent", "plugin-template-fetch-github-context")
     try:
         with urllib.request.urlopen(req) as response:  # noqa: S310
             return response.status, response.read(), dict(response.headers)

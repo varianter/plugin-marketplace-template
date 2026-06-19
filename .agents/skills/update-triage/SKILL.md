@@ -49,7 +49,7 @@ By default this targets the current repo and looks back 7 days. It collects issu
 
 - maintainers repeatedly flipping the same label on similar issues (a label-taxonomy hint)
 - maintainers leaving the same kind of follow-up comment on the same class of issue (a recurring follow-up-question pattern)
-- maintainers consistently identifying a different owner than Oz inferred (an owner-inference hint)
+- maintainers consistently identifying a different owner than the agent inferred (an owner-inference hint)
 
 4. Propose the smallest edit that explains the repeated signal:
 
@@ -69,6 +69,6 @@ By default this targets the current repo and looks back 7 days. It collects issu
 
 - Re-read the updated `triage-issue-local` companion skill and confirm any new rules are explicit.
 - Keep the companion concise; do not turn it into a long style guide.
-- Commit any changes on a local branch named `oz-agent/update-triage`. Do NOT push the branch; the Python entrypoint will run a write-surface guard and push only when the guard passes.
-- If the updates warrant a PR, it will be opened from the pushed branch. Tag `@captainsafia` as a reviewer on that PR.
+- Commit any changes on a local branch named `agent/update-triage`. Do NOT push the branch unless the surrounding workflow explicitly asks for it.
+- If the updates warrant a PR, it should be opened by the surrounding workflow or maintainer.
 - Validate any temporary JSON with `jq` before relying on it.

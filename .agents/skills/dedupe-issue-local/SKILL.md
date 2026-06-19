@@ -1,10 +1,10 @@
 ---
 name: dedupe-issue-local
 specializes: dedupe-issue
-description: Repo-specific dedupe guidance for oz-for-oss. Only the categories declared overridable by the core dedupe-issue skill may be specialized here.
+description: Repo-specific dedupe guidance for varianter/plugin-template. Only the categories declared overridable by the core dedupe-issue skill may be specialized here.
 ---
 
-# Repo-specific dedupe guidance for `oz-for-oss`
+# Repo-specific dedupe guidance for `varianter/plugin-template`
 
 This file is a companion to the core `dedupe-issue` skill. It does not
 redefine the duplicate-detection algorithm, the similarity thresholds,

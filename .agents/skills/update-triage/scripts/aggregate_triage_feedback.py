@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 
-DEFAULT_REPO = "warpdotdev/oz-for-oss"
+DEFAULT_REPO = "varianter/plugin-template"
 # Associations we can trust without probing org membership. When the
 # association is anything else we fall back to the org-membership check
 # below so CONTRIBUTOR comments from actual organization members (e.g.

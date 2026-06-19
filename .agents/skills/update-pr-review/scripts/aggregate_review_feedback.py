@@ -14,8 +14,8 @@ from typing import Any
 from urllib.parse import urlparse
 
 
-DEFAULT_REPO = "warpdotdev/oz-for-oss"
-DEFAULT_AGENT_LOGINS = ("warp-dev-github-integration[bot]",)
+DEFAULT_REPO = "varianter/plugin-template"
+DEFAULT_AGENT_LOGINS: tuple[str, ...] = ()
 SEVERITY_RE = re.compile(r"^\s*(?:[^\[]+\s+)?\[(CRITICAL|IMPORTANT|SUGGESTION|NIT)\]")
 
 PR_FILES_QUERY = """
@@ -123,7 +123,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--repo",
-        help="GitHub repository in owner/name form. Defaults to the current git remote, then warpdotdev/oz-for-oss.",
+        help="GitHub repository in owner/name form. Defaults to the current git remote, then varianter/plugin-template.",
     )
     parser.add_argument(
         "--pr",
@@ -142,7 +142,7 @@ def parse_args() -> argparse.Namespace:
         action="append",
         help=(
             "GitHub login used by the coding agent whose comments should be analyzed. "
-            "May be supplied more than once. Defaults to warp-dev-github-integration[bot]."
+            "May be supplied more than once. Required unless DEFAULT_AGENT_LOGINS is configured."
         ),
     )
     parser.add_argument(
@@ -487,6 +487,10 @@ def main() -> None:
         raise SystemExit(f"--repo must be in owner/name format, got: {repo}")
     owner, repo_name = repo.split("/", 1)
     agent_logins = set(args.agent_login or DEFAULT_AGENT_LOGINS)
+    if not agent_logins:
+        raise SystemExit(
+            "At least one --agent-login is required until this repository configures a default agent bot login."
+        )
 
     pr_numbers = args.pr or [pr["number"] for pr in fetch_recent_pull_requests(owner, repo_name, args.days)]
     pull_requests: list[dict[str, Any]] = []

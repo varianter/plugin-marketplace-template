@@ -7,7 +7,7 @@ description: Update the repo-local review-pr-local and review-spec-local compani
 
 Use this skill to improve the repo-local review companions `.agents/skills/review-pr-local/SKILL.md` and `.agents/skills/review-spec-local/SKILL.md` from real reviewer feedback. The shared `review-pr` skill and the repo-local core `.agents/skills/review-spec/SKILL.md` are the cross-repo contracts and are read-only from this loop.
 
-The repository uses two separate review skills: `review-pr` for code pull requests and `review-spec` for spec-only pull requests (PRs where every changed file lives under `specs/`). Feedback from each category of PR should be routed to the corresponding repo-local companion.
+This repository primarily uses `review-pr` for code, documentation, workflow, skill, and MCP changes. Checked-in spec files are not part of the normal workflow; feedback from an unexpected spec-only PR should generally reinforce `.agents/skills/review-spec-local/SKILL.md`'s guidance that repo-persisted specs are not used here.
 
 ## Write surface
 
@@ -29,7 +29,7 @@ The self-improvement runner enforces this via a `git diff` check against allowed
 
 - Optional repository override if you are not running from the target checkout.
 - Optional time window override when you need something other than the default seven-day lookback.
-- Optional agent-login override if the review comments were not authored by the default bot identities.
+- Required `--agent-login` value unless the repository has configured a default agent bot identity in the aggregation script.
 
 ## Workflow
 
@@ -42,12 +42,12 @@ gh auth status
 2. Aggregate the feedback for pull requests updated over the last week with the bundled script:
 
 ```bash
-python3 .agents/skills/update-pr-review/scripts/aggregate_review_feedback.py
+python3 .agents/skills/update-pr-review/scripts/aggregate_review_feedback.py --agent-login <bot-login>
 ```
 
-By default this targets the current repo, looks back 7 days, and analyzes review comments authored by the bot identities used by the PR review workflow (`warp-dev-github-integration[bot]`). It also collects broader human review comments from those PRs so the skill can learn from reviewer norms even when they were not replying directly to the bot. The script writes structured JSON to a temporary file and prints the temp-file path. Treat that file as scratch state for this skill, not as a user-facing deliverable or final output. If you need a repository other than the current checkout, pass `--repo owner/name`. If you need a different author identity, pass `--agent-login <login>` one or more times.
+By default this targets the current repo and looks back 7 days. Pass the GitHub login that actually authored the agent review comments with `--agent-login <login>`; this must match a real GitHub App, bot, or user account used by the review workflow. The script also collects broader human review comments from those PRs so the skill can learn from reviewer norms even when they were not replying directly to the bot. The script writes structured JSON to a temporary file and prints the temp-file path. Treat that file as scratch state for this skill, not as a user-facing deliverable or final output. If you need a repository other than the current checkout, pass `--repo owner/name`.
 
-Each pull request in the output includes a `review_type` field that is either `"spec"` (all changed files under `specs/`) or `"code"` (any non-spec file changed). Use this field to route feedback to the correct skill.
+Each pull request in the output includes a `review_type` field. For this repository, most PRs should be `"code"`; `"spec"` is only for unexpected PRs where every changed file is under `specs/`.
 
 3. Read the generated JSON and look for repeated reviewer signals, especially:
 
@@ -61,7 +61,7 @@ Each pull request in the output includes a `review_type` field that is either `"
 4. Partition the feedback by `review_type`:
 
 - Feedback from `"code"` PRs applies to `.agents/skills/review-pr-local/SKILL.md`.
-- Feedback from `"spec"` PRs applies to `.agents/skills/review-spec-local/SKILL.md`.
+- Feedback from `"spec"` PRs applies to `.agents/skills/review-spec-local/SKILL.md`, usually to clarify that checked-in specs are not expected here.
 - Update each companion skill independently with the smallest rule change that explains the feedback for that category.
 - If feedback for one category is empty, skip that companion.
 
@@ -94,6 +94,6 @@ Use that temporary data as evidence when refining the skills, then remove it bef
 
 - Re-read the updated `review-pr-local` and/or `review-spec-local` companion skills and confirm any new rules are explicit.
 - Keep each companion concise; do not turn them into long style guides.
-- Commit any changes on a local branch named `oz-agent/update-pr-review`. Do NOT push the branch; the Python entrypoint will run a write-surface guard and push only when the guard passes.
-- If the updates warrant a PR, it will be opened from the pushed branch. Tag `@captainsafia` as a reviewer on that PR.
+- Commit any changes on a local branch named `agent/update-pr-review`. Do NOT push the branch unless the surrounding workflow explicitly asks for it.
+- If the updates warrant a PR, it should be opened by the surrounding workflow or maintainer, not by the skill itself.
 - Validate any temporary JSON with `jq` before relying on it.
