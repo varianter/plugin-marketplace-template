@@ -21,7 +21,7 @@ COPY plugins/${PLUGIN_NAME}/tsconfig.json ./plugins/${PLUGIN_NAME}/tsconfig.json
 RUN pnpm --filter @variant/mcp-server run build
 RUN pnpm --filter "@variant/plugin-${PLUGIN_NAME}" run build
 # Create a standalone deployment bundle with all production deps resolved (no workspace symlinks)
-RUN pnpm deploy --filter "@variant/plugin-${PLUGIN_NAME}" --prod /build/deploy
+RUN pnpm deploy --filter "@variant/plugin-${PLUGIN_NAME}" --prod --legacy /build/deploy
 
 # Stage 2: Runtime
 FROM node:24-alpine AS runtime
