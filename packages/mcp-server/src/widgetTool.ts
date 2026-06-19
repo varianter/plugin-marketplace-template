@@ -30,7 +30,7 @@ export type WidgetToolConfig = Omit<McpUiAppToolConfig, '_meta'> & {
   _meta?: Omit<NonNullable<McpUiAppToolConfig['_meta']>, 'ui'>;
 };
 
-export function createWidgetToolConfig(config: WidgetToolConfig): McpUiAppToolConfig {
+function createWidgetToolConfig(config: WidgetToolConfig): McpUiAppToolConfig {
   const { resource, _meta, ...toolConfig } = config;
 
   return {
@@ -42,7 +42,7 @@ export function createWidgetToolConfig(config: WidgetToolConfig): McpUiAppToolCo
   };
 }
 
-export function createWidgetResourceResult(resource: WidgetResourceDefinition, html: string) {
+function createWidgetResourceResult(resource: WidgetResourceDefinition, html: string) {
   return {
     contents: [
       {
@@ -54,7 +54,7 @@ export function createWidgetResourceResult(resource: WidgetResourceDefinition, h
   };
 }
 
-export function registerWidgetResource(
+function registerWidgetResource(
   server: McpServer,
   resource: WidgetResourceDefinition,
 ): void {

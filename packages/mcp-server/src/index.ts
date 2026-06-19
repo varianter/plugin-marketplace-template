@@ -24,19 +24,10 @@ export type { ServerMetadata } from './config/metadata.js';
 export { loadServerMetadata } from './config/metadata.js';
 export { log } from './log.js';
 export type { ToolRegistrar } from './registerLocalPluginTools.js';
-export {
-  composeToolRegistrars,
-  definePluginTools,
-  registerLocalPluginTools,
-} from './registerLocalPluginTools.js';
-export { injectExtApps, loadWidgetHtml } from './widgets.js';
+export { definePluginTools } from './registerLocalPluginTools.js';
+export { loadWidgetHtml } from './widgets.js';
 export type { WidgetResourceDefinition, WidgetToolConfig } from './widgetTool.js';
-export {
-  createWidgetResourceResult,
-  createWidgetToolConfig,
-  registerWidgetResource,
-  registerWidgetTool,
-} from './widgetTool.js';
+export { registerWidgetTool } from './widgetTool.js';
 export type { McpServer };
 
 export interface McpServerConfig {
@@ -88,13 +79,6 @@ export function readPluginMcpServerConfig(
 }
 
 /** Create and start an MCP HTTP server from explicit config. */
-export function startPluginMcpServer(
-  config: McpServerConfig,
-  registerTools: RegisterTools,
-): Promise<void> {
-  return createAndStartMcpServer(config, registerTools);
-}
-
 export async function createAndStartMcpServer(
   config: McpServerConfig,
   registerTools: RegisterTools,
@@ -106,7 +90,7 @@ export async function createAndStartMcpServer(
   }
 }
 
-export function logStartupError(err: unknown): never {
+function logStartupError(err: unknown): never {
   process.stderr.write(
     `${JSON.stringify({ level: 'error', msg: 'startup failed', error: String(err) })}\n`,
   );

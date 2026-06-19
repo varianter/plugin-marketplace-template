@@ -20,5 +20,5 @@ export function attachRequestContext(req: Request, _res: Response, next: NextFun
     token: auth.token,
   };
 
-  runWithContext(ctx, async () => next()).catch(next);
+  runWithContext(ctx, next);
 }

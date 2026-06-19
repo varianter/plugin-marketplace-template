@@ -34,7 +34,7 @@ function extAppsBundle(): string {
 // globalThis.ExtApps is set before the Svelte module script executes.
 // The HTML is read by the caller (per-request) so hot-reload dev rebuilds are
 // reflected without a server restart.
-export function injectExtApps(html: string): string {
+function injectExtApps(html: string): string {
   const bundle = extAppsBundle();
   return html.replace('<head>', () => `<head><script type="module">${bundle}</script>`);
 }

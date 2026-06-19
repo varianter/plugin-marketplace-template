@@ -4,14 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm run build:widget && concurrently \"node -e \\\"import('@variant/mcp-server/build-widgets')\\\" build-widgets --watch --mode development\" \"tsx watch --env-file ../../.env mcp/index.ts\"",
+    "dev": "pnpm build:widgets && concurrently \"pnpm build:widgets -- --watch --mode development\" \"pnpm dev:server\"",
     "dev:server": "tsx watch --env-file ../../.env mcp/index.ts",
-    "build": "rm -rf mcp/dist && pnpm run build:widget && tsc -p tsconfig.json && cp -r mcp/assets mcp/dist/mcp/assets",
-    "build:widget": "node -e \"import('@variant/mcp-server/build-widgets')\" build-widgets",
+    "build": "rm -rf mcp/dist && pnpm build:widgets && tsc -p tsconfig.json && cp -r mcp/assets mcp/dist/mcp/assets",
+    "build:widgets": "node ../../packages/mcp-server/dist/buildWidgets.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node mcp/dist/mcp/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector --transport http --server-url http://127.0.0.1:8080/mcp",
-    "jam": "pnpm dlx @mcpjam/inspector@latest --no-telemetry --config ../../mcp.config.json --server plugin-mcp --oauth"
+    "jam": "pnpm dlx @mcpjam/inspector@latest --no-telemetry --config ./mcp.config.json --server plugin-mcp --oauth"
   },
   "dependencies": {
     "@variant/mcp-server": "workspace:*",
