@@ -26,6 +26,13 @@ export { log } from './log.js';
 export type { RegisterLocalPluginToolsOptions } from './registerLocalPluginTools.js';
 export { registerLocalPluginTools } from './registerLocalPluginTools.js';
 export { injectExtApps, loadWidgetHtml } from './widgets.js';
+export type { WidgetResourceDefinition, WidgetToolConfig } from './widgetTool.js';
+export {
+  createWidgetResourceResult,
+  createWidgetToolConfig,
+  registerWidgetResource,
+  registerWidgetTool,
+} from './widgetTool.js';
 export type { McpServer };
 
 export interface McpServerConfig {

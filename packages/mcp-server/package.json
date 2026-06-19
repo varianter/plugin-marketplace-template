@@ -17,6 +17,10 @@
     "./build-widgets": {
       "import": "./dist/buildWidgets.js",
       "types": "./dist/buildWidgets.d.ts"
+    },
+    "./widget": {
+      "import": "./dist/widget.js",
+      "types": "./dist/widget.d.ts"
     }
   },
   "scripts": {

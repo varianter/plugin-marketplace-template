@@ -1,15 +1,11 @@
 <!-- biome-ignore-all lint/correctness/noUnusedVariables: Biome does not detect Svelte template references. -->
 <script lang="ts">
+import type { McpWidgetApp } from '@variant/mcp-server/widget';
+
+type HostContext = { theme?: string } | null | undefined;
 type ToolInput = { arguments?: Record<string, unknown> };
 
-type McpApp = {
-  getHostContext: () => { theme?: string } | null | undefined;
-  onhostcontextchanged: ((ctx: { theme?: string }) => void) | null;
-  ontoolinput: ((params: ToolInput) => void) | null;
-  sendMessage: (msg: { role: string; content: Array<{ type: string; text: string }> }) => void;
-};
-
-const { app }: { app: McpApp } = $props();
+const { app }: { app: McpWidgetApp } = $props();
 
 // biome-ignore lint/correctness/noUnusedVariables: Referenced by Svelte markup.
 let name = $state('World');
@@ -20,14 +16,16 @@ let dark = $state(false);
 let clicks = $state(0);
 
 $effect(() => {
-  const ctx = app.getHostContext?.();
+  const ctx = app.getHostContext() as HostContext;
   dark = ctx?.theme === 'dark';
   app.onhostcontextchanged = (ctx) => {
-    dark = ctx?.theme === 'dark';
+    const hostContext = ctx as HostContext;
+    dark = hostContext?.theme === 'dark';
   };
 
   app.ontoolinput = (params) => {
-    const args = params.arguments ?? {};
+    const toolInput = params as ToolInput;
+    const args = toolInput.arguments ?? {};
     if (typeof args.name === 'string' && args.name.trim()) name = args.name;
     if (typeof args.message === 'string' && args.message.trim()) message = args.message;
   };

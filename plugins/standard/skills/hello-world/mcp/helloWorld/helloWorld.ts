@@ -1,23 +1,21 @@
-import {
-  getRequestContext,
-  loadWidgetHtml,
-  type McpServer,
-  RESOURCE_MIME_TYPE,
-  registerAppResource,
-  registerAppTool,
-} from '@variant/mcp-server';
+import { getRequestContext, type McpServer, registerWidgetTool } from '@variant/mcp-server';
 import { z } from 'zod';
 
-const RESOURCE_URI = 'ui://widgets/hello-world';
+const HELLO_WORLD_WIDGET = {
+  title: 'Hello World Widget',
+  uri: 'ui://widgets/hello-world',
+  widgetName: 'hello-world',
+};
 
 export function registerHelloWorld(server: McpServer): void {
-  registerAppTool(
+  registerWidgetTool(
     server,
     'hello-world-widget',
     {
       title: 'Hello World Widget',
       description:
         'Opens a simple interactive Hello World widget. This demonstrates a skill-colocated MCP tool with a Svelte widget in the template repository.',
+      resource: HELLO_WORLD_WIDGET,
       inputSchema: {
         name: z
           .string()
@@ -35,7 +33,6 @@ export function registerHelloWorld(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: false,
       },
-      _meta: { ui: { resourceUri: RESOURCE_URI } },
     },
     async (args) => {
       const ctx = getRequestContext();
@@ -53,14 +50,4 @@ export function registerHelloWorld(server: McpServer): void {
       };
     },
   );
-
-  registerAppResource(server, 'Hello World Widget', RESOURCE_URI, {}, async () => ({
-    contents: [
-      {
-        uri: RESOURCE_URI,
-        mimeType: RESOURCE_MIME_TYPE,
-        text: loadWidgetHtml('hello-world'),
-      },
-    ],
-  }));
 }
