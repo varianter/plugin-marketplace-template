@@ -48,7 +48,6 @@ interface PluginConfigFile {
     tenantId?: string;
     issuerUrl?: string;
     clientId?: string;
-    clientSecret?: string;
     audience?: string;
     acceptedAudiences?: string[];
     acceptedIssuers?: string[];
@@ -88,11 +87,7 @@ export function loadConfig(overrides: ConfigOverrides = {}): Config {
     fileConfig.auth?.issuerUrl ??
     (tenantId ? `https://login.microsoftonline.com/${tenantId}/v2.0` : '');
   const clientSecret =
-    process.env.AUTH_CLIENT_SECRET ??
-    process.env.OAUTH_CLIENT_SECRET ??
-    process.env.AZURE_CLIENT_SECRET ??
-    fileConfig.auth?.clientSecret ??
-    '';
+    process.env.AUTH_CLIENT_SECRET ?? process.env.OAUTH_CLIENT_SECRET ?? process.env.AZURE_CLIENT_SECRET ?? '';
   const scopes = parseScopes(
     process.env.AUTH_SCOPES ??
       process.env.OAUTH_SCOPES ??

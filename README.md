@@ -30,15 +30,35 @@ Then update `plugins/standard/.claude-plugin/plugin.json` with your MCP server U
 
 ## Configuration
 
-Runtime defaults live in [`plugin.config.json`](plugin.config.json). Environment variables override these values at runtime, so keep secrets such as client IDs and client secrets in `.env` or your deployment environment instead of committing them.
+Runtime defaults live in [`plugin.config.json`](plugin.config.json). Environment variables override these values at runtime. Commit only safe, shared defaults; put secrets and environment-specific values in `.env`, `plugin.config.local.json` (gitignored), or your deployment environment.
 
-The template config includes:
+Safe to commit as shared defaults:
 
-- `mcpPath` — HTTP endpoint path for the MCP server, default `/mcp`
-- `auth` — OAuth/OIDC provider defaults, redirect origins, and client registration behavior
-- `limits` — MCP session and rate-limit defaults
+- `mcpPath` — HTTP endpoint path for MCP requests; clients must use this route.
+- `auth.enabled` — turns OAuth/OIDC protection on or off; needed to require authenticated access.
+- `auth.provider` — identity provider type (`entra`, `auth0`, `okta`, etc.); needed for provider-specific OAuth metadata.
+- `auth.scopes` — scopes requested during login; needed to control what access tokens can contain.
+- `auth.scopeAliases` — extra scope names mapped for Entra compatibility; needed for Claude/MCP client interoperability.
+- `auth.compatibilityProxy` — enables compatibility OAuth endpoints; needed for clients that cannot use the provider directly.
+- `auth.clientRegistration` — dynamic registration mode (`none`, `provider`, `static`); needed to tell clients how to obtain a client ID.
+- `limits.maxSessions` — maximum concurrent MCP sessions; needed to cap memory and connection usage.
+- `limits.rateLimitPerMinute` — per-minute request limit; needed to protect the server from bursts or abuse.
 
-See [`plugin.config.schema.json`](plugin.config.schema.json) for all supported fields.
+Can be committed if shared across deployments; otherwise set via environment:
+
+- `auth.tenantId` / `AUTH_TENANT_ID` — Entra tenant ID; used to derive the issuer URL for Microsoft Entra.
+- `auth.issuerUrl` / `AUTH_ISSUER_URL` — OAuth/OIDC issuer URL; needed to discover metadata and validate tokens.
+- `auth.clientId` / `AUTH_CLIENT_ID` — OAuth client/application ID; needed for login and token audience checks.
+- `auth.audience` / `AUTH_AUDIENCE` — requested token audience; needed when the provider expects an explicit API audience.
+- `auth.acceptedAudiences` / `AUTH_ACCEPTED_AUDIENCES` — extra JWT audiences to trust; needed when clients send provider-specific audience values.
+- `auth.acceptedIssuers` / `AUTH_ACCEPTED_ISSUERS` — extra JWT issuers to trust; needed for provider aliases or multi-issuer setups.
+- `auth.allowedRedirectOrigins` / `AUTH_ALLOWED_REDIRECT_ORIGINS` — allowed OAuth redirect origins; needed to prevent unsafe redirect targets.
+
+Environment-only secrets:
+
+- `AUTH_CLIENT_SECRET` — OAuth client secret; required only for confidential-client flows and intentionally not supported in `plugin.config.json`.
+
+`$schema` may be included only to give editors validation and autocomplete. See [`plugin.config.schema.json`](plugin.config.schema.json) for valid types and enum values.
 
 ## Project structure
 

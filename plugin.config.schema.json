@@ -27,7 +27,6 @@
         "tenantId": { "type": "string" },
         "issuerUrl": { "type": "string" },
         "clientId": { "type": "string" },
-        "clientSecret": { "type": "string" },
         "audience": { "type": "string" },
         "acceptedAudiences": { "type": "array", "items": { "type": "string" } },
         "acceptedIssuers": { "type": "array", "items": { "type": "string" } },
