@@ -74,6 +74,11 @@ export function registerWidgetTool<
     InputArgs extends undefined | ZodRawShapeCompat | AnySchema ? InputArgs : AnySchema
   >,
 ): void {
-  registerAppTool(server, name, createWidgetToolConfig(config), callback);
+  const toolConfig = createWidgetToolConfig(config) as McpUiAppToolConfig & {
+    inputSchema?: InputArgs;
+    outputSchema?: OutputArgs;
+  };
+
+  registerAppTool<OutputArgs, InputArgs>(server, name, toolConfig, callback);
   registerWidgetResource(server, config.resource);
 }

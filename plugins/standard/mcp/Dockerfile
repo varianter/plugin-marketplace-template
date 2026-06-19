@@ -6,7 +6,7 @@ RUN corepack enable
 WORKDIR /build
 ARG PLUGIN_NAME=standard
 # Copy workspace configuration
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .npmrc ./
 # Copy workspace packages needed by this plugin
 COPY packages/ ./packages/
 # Copy plugin manifest before install so pnpm can resolve the workspace package
