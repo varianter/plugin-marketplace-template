@@ -80,7 +80,7 @@ cd scripts && pnpm exec tsx validate.ts ../plugins/standard/skills/my-skill
 
 ## Adding an MCP tool
 
-Create `plugins/standard/tools/<name>/<toolName>.ts`; files exporting `register*` functions are auto-discovered:
+Create `plugins/standard/tools/<name>/<toolName>.ts` with an explicit registrar:
 
 ```typescript
 import type { McpServer } from '@variant/mcp-server';
@@ -93,6 +93,15 @@ export function registerMyTool(server: McpServer): void {
     async ({ param }) => ({ content: [{ type: 'text', text: param }] }),
   );
 }
+```
+
+Then add it to `plugins/standard/mcp/registerTools.ts`:
+
+```typescript
+import { definePluginTools } from '@variant/mcp-server';
+import { registerMyTool } from '../tools/my-tool/myTool.js';
+
+export const registerTools = definePluginTools([registerMyTool]);
 ```
 
 For skill-colocated tools (tools under a skill's `mcp/` directory) see [`AGENTS.md`](AGENTS.md).

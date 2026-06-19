@@ -32,7 +32,7 @@ plugins/
     tsconfig.json
     mcp/             ← Plugin-specific MCP server
       index.ts       ← Entry point — calls @variant/mcp-server
-      registerTools.ts ← Auto-discovers this plugin's tools
+      registerTools.ts ← Explicit manifest for this plugin's tools
       assets/        ← Static assets (icon.png)
       Dockerfile
 
@@ -66,20 +66,23 @@ Skill-colocated tool, **without** widget:
 
 1. Add `plugins/<plugin>/skills/<skill-name>/mcp/<toolName>.ts`
 2. Import: `import type { McpServer } from '@variant/mcp-server'`
-3. Export a `register<ToolName>(server: McpServer): void` function; it is auto-discovered
+3. Export a `register<ToolName>(server: McpServer): void` function
+4. Import it in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
 
 Skill-colocated tool **with** an interactive widget:
 
 1. Create `plugins/<plugin>/skills/<skill-name>/mcp/<toolName>/` directory
 2. Add `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte` inside it
 3. Load the compiled widget with `loadWidgetHtml('<tool-name-kebab>')` from `@variant/mcp-server`
-4. Export a `register<ToolName>(server: McpServer): void` function; it is auto-discovered
-5. The Vite build discovers `skills/*/mcp/*/index.html` automatically
+4. Export a `register<ToolName>(server: McpServer): void` function
+5. Import it in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
+6. The Vite build discovers `skills/*/mcp/*/index.html` automatically
 
 Standalone tool (not tied to a skill):
 
 1. Add `plugins/<plugin>/tools/<toolName>/<toolName>.ts`
-2. Export a `register<ToolName>(server: McpServer): void` function; it is auto-discovered
+2. Export a `register<ToolName>(server: McpServer): void` function
+3. Import it in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
 
 ## MCP local development
 
@@ -107,7 +110,7 @@ import type { McpServer, RequestContext, ServerMetadata, Config } from '@variant
 ```
 
 - `readPluginMcpServerConfig()` / `createAndStartMcpServer()` — starts the full Express + MCP server with auth and lifecycle management
-- `registerLocalPluginTools(server)` — auto-discovers tools from the current plugin root
+- `definePluginTools([...])` — explicit, typed plugin tool manifests
 - `getRequestContext()` — returns the authenticated user context inside a tool handler
 - `log(level, msg, extra?)` — structured JSON logger
 - `loadWidgetHtml(name)` — loads a built widget and injects the ext-apps bundle

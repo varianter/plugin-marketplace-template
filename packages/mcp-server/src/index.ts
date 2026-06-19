@@ -23,8 +23,12 @@ export { loadConfig } from './config/config.js';
 export type { ServerMetadata } from './config/metadata.js';
 export { loadServerMetadata } from './config/metadata.js';
 export { log } from './log.js';
-export type { RegisterLocalPluginToolsOptions } from './registerLocalPluginTools.js';
-export { registerLocalPluginTools } from './registerLocalPluginTools.js';
+export type { ToolRegistrar } from './registerLocalPluginTools.js';
+export {
+  composeToolRegistrars,
+  definePluginTools,
+  registerLocalPluginTools,
+} from './registerLocalPluginTools.js';
 export { injectExtApps, loadWidgetHtml } from './widgets.js';
 export type { WidgetResourceDefinition, WidgetToolConfig } from './widgetTool.js';
 export {

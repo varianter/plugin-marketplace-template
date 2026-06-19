@@ -1,79 +1,33 @@
-import { existsSync, readdirSync } from 'node:fs';
-import { basename, join, relative, sep } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { log } from './log.js';
 import type { McpServer } from './mcpEndpoint.js';
 
-export interface RegisterLocalPluginToolsOptions {
-  /** Root containing this plugin's conventional `tools/` and `skills/` directories. Defaults to `process.cwd()`. */
-  rootDir?: string;
+export type ToolRegistrar = (server: McpServer) => void | Promise<void>;
+
+/** Compose multiple tool registrars into the shape expected by the MCP server. */
+export function composeToolRegistrars(registrars: readonly ToolRegistrar[]): ToolRegistrar {
+  return (server) => registerLocalPluginTools(server, registrars);
 }
 
-type ToolModule = Record<string, unknown>;
-
-const REGISTER_EXPORT_NAME = /^register[A-Z]/;
+/** Define a plugin's explicit tool manifest as the MCP server registration function. */
+export function definePluginTools(registrars: readonly ToolRegistrar[]): ToolRegistrar {
+  return composeToolRegistrars(registrars);
+}
 
 /**
- * Discover and register MCP tools from a plugin's conventional local folders.
+ * Register the explicitly listed plugin-local tools.
  *
- * This keeps plugin code from importing files via fragile `../../skills/...` paths.
- * A module is considered a tool module when it exports one or more functions named
- * `registerSomething(server)`.
+ * This intentionally does not scan files or infer exports by name. Plugin code owns
+ * a small manifest (`mcp/registerTools.ts`) that imports and lists the registrars,
+ * making tool loading straightforward, typed, and reviewable.
  */
 export async function registerLocalPluginTools(
   server: McpServer,
-  options: RegisterLocalPluginToolsOptions = {},
+  registrars: readonly ToolRegistrar[],
 ): Promise<void> {
-  const rootDir = options.rootDir ?? process.cwd();
-
-  const files = [
-    ...findToolFiles(join(rootDir, 'tools')),
-    ...findToolFiles(join(rootDir, 'skills'), (file) =>
-      relative(join(rootDir, 'skills'), file).split(sep).includes('mcp'),
-    ),
-  ].sort();
-
-  for (const file of files) {
-    const mod = (await import(pathToFileURL(file).href)) as ToolModule;
-    const registerFunctions = Object.entries(mod).filter(
-      ([name, value]) => REGISTER_EXPORT_NAME.test(name) && typeof value === 'function',
-    );
-
-    for (const [name, register] of registerFunctions) {
-      await (register as (server: McpServer) => void | Promise<void>)(server);
-      log('debug', 'registered local plugin tool module', {
-        module: relative(rootDir, file),
-        export: name,
-      });
-    }
+  for (const register of registrars) {
+    await register(server);
+    log('debug', 'registered local plugin tool', {
+      registrar: register.name || 'anonymous',
+    });
   }
-}
-
-function findToolFiles(dir: string, include: (file: string) => boolean = () => true): string[] {
-  if (!existsSync(dir)) return [];
-
-  const files: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...findToolFiles(path, include));
-      continue;
-    }
-
-    if (entry.isFile() && isImportableToolFile(path) && include(path)) {
-      files.push(path);
-    }
-  }
-  return files;
-}
-
-function isImportableToolFile(file: string): boolean {
-  const name = basename(file);
-  const extension = name.endsWith('.ts') ? '.ts' : name.endsWith('.js') ? '.js' : undefined;
-  return (
-    extension !== undefined &&
-    !name.endsWith('.d.ts') &&
-    // Widget browser entrypoints live next to server tool files but must not be imported in Node.
-    name !== `app${extension}`
-  );
 }

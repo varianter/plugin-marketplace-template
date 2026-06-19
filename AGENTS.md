@@ -28,7 +28,7 @@ All tools import shared infrastructure from `@variant/mcp-server`, not from rela
 
 Without widget — flat file:
 
-1. Create `plugins/<plugin>/skills/<name>/mcp/<toolName>.ts` exporting a `register*` function:
+1. Create `plugins/<plugin>/skills/<name>/mcp/<toolName>.ts` exporting a registrar function:
 
 ```typescript
 import type { McpServer } from '@variant/mcp-server';
@@ -55,14 +55,14 @@ With widget — colocated directory:
 
 1. Create `plugins/<plugin>/skills/<name>/mcp/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
 2. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
-3. The build script auto-discovers any `skills/*/mcp/*/index.html` — no extra wiring needed
-
-Skill-colocated tools are auto-discovered from `plugins/<plugin>/skills/*/mcp/` when they export a `register*` function.
+3. The widget build script discovers any `skills/*/mcp/*/index.html` for browser bundles
+4. Import the server-side registrar in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
 
 **Standalone tool** (not tied to a skill):
 
 1. Create `plugins/<plugin>/tools/<toolName>/<toolName>.ts` with the same pattern
-2. Export a `register<ToolName>(server: McpServer): void` function; it is auto-discovered
+2. Export a `register<ToolName>(server: McpServer): void` function
+3. Import it in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
 
 **Error handling:** Return tool-level errors as `{ content: [{ type: 'text', text: 'Error: ...' }], isError: true }`. Throw only for unexpected infrastructure failures.
 
