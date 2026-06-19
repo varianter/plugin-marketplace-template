@@ -28,16 +28,13 @@ plugins/
     tools/           ← Standalone MCP tools (not tied to a skill)
       <name>/
         <toolName>.ts
-    mcp/             ← Plugin-specific MCP server (pnpm workspace package)
-      src/
-        index.ts     ← Entry point — calls startMcpServer() from @variant/mcp-server
-        registerTools.ts ← Auto-discovers this plugin's tools
-        assets/      ← Static assets (icon.png)
-      scripts/
-        build-widgets.mjs
+    package.json     ← @variant/plugin-standard (pnpm workspace package)
+    tsconfig.json
+    mcp/             ← Plugin-specific MCP server
+      index.ts       ← Entry point — calls @variant/mcp-server
+      registerTools.ts ← Auto-discovers this plugin's tools
+      assets/        ← Static assets (icon.png)
       Dockerfile
-      package.json   ← @variant/plugin-standard-mcp
-      tsconfig.json
 
 .claude-plugin/
   marketplace.json   ← Repo-level manifest (Claude marketplace schema, lists all plugins)
@@ -50,7 +47,7 @@ tsconfig.base.json   ← Shared TypeScript base config
 
 1. Create `plugins/<name>/` with the same structure as `plugins/standard/`
 2. Add `plugins/<name>/.claude-plugin/plugin.json` pointing to its skills and MCP server
-3. Add `plugins/<name>/mcp/package.json` with `"@variant/mcp-server": "workspace:*"`
+3. Add `plugins/<name>/package.json` with `"@variant/mcp-server": "workspace:*"`
 4. Reference the new plugin in `.claude-plugin/marketplace.json`
 5. Add the plugin name to the `options` list and `resolve-matrix` step in `.github/workflows/deploy.yml`
 
@@ -59,7 +56,7 @@ tsconfig.base.json   ← Shared TypeScript base config
 1. Add a new directory under `plugins/<plugin>/skills/<name>/`
 2. Create `SKILL.md` with `name` and `description` frontmatter
 3. Add `references/`, `assets/`, `scripts/`, or an optional `mcp/` directory as needed
-4. Run validation: `cd scripts && bun run validate.ts ../plugins/<plugin>/skills/<name>`
+4. Run validation: `cd scripts && pnpm exec tsx validate.ts ../plugins/<plugin>/skills/<name>`
 
 ## Creating a new MCP tool
 
@@ -75,7 +72,7 @@ Skill-colocated tool **with** an interactive widget:
 
 1. Create `plugins/<plugin>/skills/<skill-name>/mcp/<toolName>/` directory
 2. Add `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte` inside it
-3. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
+3. Load the compiled widget with `loadWidgetHtml('<tool-name-kebab>')` from `@variant/mcp-server`
 4. Export a `register<ToolName>(server: McpServer): void` function; it is auto-discovered
 5. The Vite build discovers `skills/*/mcp/*/index.html` automatically
 
@@ -105,14 +102,15 @@ pnpm check               # biome lint + format
 The shared package exports:
 
 ```typescript
-import { startMcpServer, getRequestContext, log, injectExtApps } from '@variant/mcp-server';
+import { getRequestContext, loadWidgetHtml, log } from '@variant/mcp-server';
 import type { McpServer, RequestContext, ServerMetadata, Config } from '@variant/mcp-server';
 ```
 
-- `startMcpServer(options)` — starts the full Express + MCP server with auth and lifecycle management
+- `readPluginMcpServerConfig()` / `createAndStartMcpServer()` — starts the full Express + MCP server with auth and lifecycle management
+- `registerLocalPluginTools(server)` — auto-discovers tools from the current plugin root
 - `getRequestContext()` — returns the authenticated user context inside a tool handler
 - `log(level, msg, extra?)` — structured JSON logger
-- `injectExtApps(html)` — injects the ext-apps bundle into a widget HTML file
+- `loadWidgetHtml(name)` — loads a built widget and injects the ext-apps bundle
 
 ## Deployment
 

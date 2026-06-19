@@ -1,9 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   getRequestContext,
-  injectExtApps,
+  loadWidgetHtml,
   type McpServer,
   RESOURCE_MIME_TYPE,
   registerAppResource,
@@ -11,23 +8,7 @@ import {
 } from '@variant/mcp-server';
 import { z } from 'zod';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const RESOURCE_URI = 'ui://widgets/hello-world';
-
-function widgetPath(): string {
-  const candidates = [
-    // Source/dev location: plugins/standard/skills/hello-world/mcp/helloWorld/*.ts
-    join(__dirname, '../../../../mcp/dist/widgets/hello-world/index.html'),
-    // Compiled location: plugins/standard/mcp/dist/skills/hello-world/mcp/helloWorld/*.js
-    join(__dirname, '../../../../widgets/hello-world/index.html'),
-  ];
-  const found = candidates.find((candidate) => existsSync(candidate));
-  return found ?? candidates[0];
-}
-
-function loadWidgetHtml(): string {
-  return injectExtApps(readFileSync(widgetPath(), 'utf8'));
-}
 
 export function registerHelloWorld(server: McpServer): void {
   registerAppTool(
@@ -78,7 +59,7 @@ export function registerHelloWorld(server: McpServer): void {
       {
         uri: RESOURCE_URI,
         mimeType: RESOURCE_MIME_TYPE,
-        text: loadWidgetHtml(),
+        text: loadWidgetHtml('hello-world'),
       },
     ],
   }));

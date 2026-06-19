@@ -1,11 +1,11 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 /**
  * Quick validation script for skills - minimal version
  */
 
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { YAML } from 'bun';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const ALLOWED_PROPERTIES = new Set([
   'name',
@@ -19,6 +19,71 @@ const ALLOWED_PROPERTIES = new Set([
 const KEBAB_REGEX = /^[a-z0-9-]+$/;
 
 type Result = { valid: true; message: string } | { valid: false; message: string };
+
+type ParseResult = { ok: true; value: Record<string, unknown> } | { ok: false; message: string };
+
+function parseScalar(value: string): unknown {
+  const trimmed = value.trim();
+  if (trimmed === '') return '';
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  if (trimmed === 'true') return true;
+  if (trimmed === 'false') return false;
+  if (trimmed === 'null' || trimmed === '~') return null;
+  return trimmed;
+}
+
+function parseFrontmatter(frontmatterText: string): ParseResult {
+  const lines = frontmatterText.replace(/\r\n/g, '\n').split('\n');
+  const result: Record<string, unknown> = {};
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+    if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
+
+    if (/^\s/.test(line)) {
+      // Nested YAML belongs to the previous top-level key. The validator only
+      // needs top-level keys plus scalar values for fields it validates.
+      continue;
+    }
+
+    const match = /^([A-Za-z0-9_-]+):(?:\s*(.*))?$/.exec(line);
+    if (!match) {
+      return { ok: false, message: `Unsupported YAML frontmatter line: ${line}` };
+    }
+
+    const [, key, rawValue = ''] = match;
+    const value = rawValue.trim();
+
+    if (/^[>|][+-]?$/.test(value)) {
+      const blockLines: string[] = [];
+      while (index + 1 < lines.length) {
+        const next = lines[index + 1];
+        if (next.trim() !== '' && !/^\s/.test(next)) break;
+        index++;
+        blockLines.push(next.replace(/^\s{2,}/, ''));
+      }
+      result[key] = value.startsWith('>')
+        ? blockLines.join(' ').trim()
+        : blockLines.join('\n').trim();
+      continue;
+    }
+
+    if (value === '') {
+      const next = lines[index + 1];
+      result[key] = next && /^\s+-\s+/.test(next) ? [] : {};
+      continue;
+    }
+
+    result[key] = parseScalar(value);
+  }
+
+  return { ok: true, value: result };
+}
 
 export function validateSkill(skillPath: string): Result {
   const skillMdPath = join(skillPath, 'SKILL.md');
@@ -40,15 +105,15 @@ export function validateSkill(skillPath: string): Result {
 
   const frontmatterText = match[1];
 
-  let frontmatter: unknown;
-  try {
-    frontmatter = YAML.parse(frontmatterText);
-  } catch (e) {
+  const parsed = parseFrontmatter(frontmatterText);
+  if (!parsed.ok) {
     return {
       valid: false,
-      message: `Invalid YAML in frontmatter: ${e instanceof Error ? e.message : e}`,
+      message: `Invalid YAML in frontmatter: ${parsed.message}`,
     };
   }
+
+  const frontmatter: unknown = parsed.value;
 
   if (typeof frontmatter !== 'object' || frontmatter === null || Array.isArray(frontmatter)) {
     return { valid: false, message: 'Frontmatter must be a YAML dictionary' };
@@ -141,13 +206,51 @@ export function validateSkill(skillPath: string): Result {
   return { valid: true, message: 'Skill is valid!' };
 }
 
-if (import.meta.main) {
+function findAllPluginSkills(): string[] {
+  const scriptDir = dirname(fileURLToPath(import.meta.url));
+  const repoRoot = resolve(scriptDir, '..');
+  const pluginsDir = join(repoRoot, 'plugins');
+
+  if (!existsSync(pluginsDir)) return [];
+
+  const skillPaths: string[] = [];
+  for (const pluginEntry of readdirSync(pluginsDir, { withFileTypes: true })) {
+    if (!pluginEntry.isDirectory()) continue;
+
+    const skillsDir = join(pluginsDir, pluginEntry.name, 'skills');
+    if (!existsSync(skillsDir)) continue;
+
+    for (const skillEntry of readdirSync(skillsDir, { withFileTypes: true })) {
+      if (!skillEntry.isDirectory()) continue;
+      skillPaths.push(join(skillsDir, skillEntry.name));
+    }
+  }
+
+  return skillPaths.sort();
+}
+
+const isMain = resolve(process.argv[1] ?? '') === fileURLToPath(import.meta.url);
+
+if (isMain) {
   const args = process.argv.slice(2);
-  if (args.length !== 1) {
-    console.error('Usage: bun run validate.ts <skill_directory>');
+  if (args.length > 1) {
+    console.error('Usage: pnpm exec tsx validate.ts [skill_directory]');
     process.exit(1);
   }
-  const result = validateSkill(args[0]);
-  console.log(result.message);
-  process.exit(result.valid ? 0 : 1);
+
+  const skillPaths = args.length === 1 ? [args[0]] : findAllPluginSkills();
+  if (skillPaths.length === 0) {
+    console.error('No plugin skills found.');
+    process.exit(1);
+  }
+
+  let valid = true;
+  for (const skillPath of skillPaths) {
+    const result = validateSkill(skillPath);
+    const displayPath = relative(process.cwd(), resolve(skillPath)) || '.';
+    console.log(`${displayPath}: ${result.message}`);
+    valid &&= result.valid;
+  }
+
+  process.exit(valid ? 0 : 1);
 }

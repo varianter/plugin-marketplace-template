@@ -1,6 +1,6 @@
 packages:
   - packages/*
-  - plugins/*/mcp
+  - plugins/*
 
 allowBuilds:
   esbuild: false

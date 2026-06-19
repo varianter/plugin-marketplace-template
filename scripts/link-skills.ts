@@ -1,8 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 /**
  * Copies all skills into ~/.mcpjam/skills/ so MCPJam can discover them.
  * Run automatically via `predev` / `predev:server` in mcp/package.json, or manually:
- *   bun scripts/link-skills.ts
+ *   pnpm exec tsx scripts/link-skills.ts
  */
 
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';

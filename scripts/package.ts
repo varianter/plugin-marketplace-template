@@ -1,17 +1,19 @@
-#!/usr/bin/env bun
+#!/usr/bin/env tsx
 /**
  * Skill Packager - Creates a distributable .skill file from a skill folder
  *
  * Usage:
- *   bun run tools/package.ts <path/to/skill-folder> [output-directory]
+ *   pnpm exec tsx scripts/package.ts <path/to/skill-folder> [output-directory]
  *
  * Example:
- *   bun run tools/package.ts skills/my-skill
- *   bun run tools/package.ts skills/my-skill ./dist
+ *   pnpm exec tsx scripts/package.ts skills/my-skill
+ *   pnpm exec tsx scripts/package.ts skills/my-skill ./dist
  */
 
+import { spawn } from 'node:child_process';
 import {
   existsSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
   statSync,
@@ -166,18 +168,25 @@ async function packageSkill(skillPath: string, outputDir?: string): Promise<stri
   const skillName = basename(absSkillPath);
   const absOutputDir = outputDir ? resolve(outputDir) : resolve('.');
 
-  await Bun.$`mkdir -p ${absOutputDir}`;
+  mkdirSync(absOutputDir, { recursive: true });
 
   const skillFile = join(absOutputDir, `${skillName}.skill`);
   const files = collectFiles(absSkillPath);
   const skillParent = resolve(absSkillPath, '..');
 
-  // Bun doesn't have a built-in zip API, so we shell out to the system zip tool
+  // Shell out to the system zip tool.
   const relFiles = files.map((f) => relative(skillParent, f));
-
-  const { exitCode, stderr } = await Bun.$`zip -r ${skillFile} ${skillName}`
-    .cwd(skillParent)
-    .quiet();
+  const { exitCode, stderr } = await new Promise<{ exitCode: number | null; stderr: string }>(
+    (resolveProcess, reject) => {
+      const child = spawn('zip', ['-r', skillFile, ...relFiles], { cwd: skillParent });
+      let stderr = '';
+      child.stderr.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+      child.on('error', reject);
+      child.on('close', (exitCode) => resolveProcess({ exitCode, stderr }));
+    },
+  );
 
   // Remove the temporary .env file from the source tree immediately after zipping
   if (envFilePath && existsSync(envFilePath)) {
@@ -185,7 +194,7 @@ async function packageSkill(skillPath: string, outputDir?: string): Promise<stri
   }
 
   if (exitCode !== 0) {
-    console.error(`❌ Error creating .skill file: ${stderr.toString()}`);
+    console.error(`❌ Error creating .skill file: ${stderr}`);
     return null;
   }
 
@@ -199,10 +208,12 @@ async function packageSkill(skillPath: string, outputDir?: string): Promise<stri
 
 const args = process.argv.slice(2);
 if (args.length < 1 || args.length > 2) {
-  console.error('Usage: bun run tools/package.ts <path/to/skill-folder> [output-directory]');
+  console.error(
+    'Usage: pnpm exec tsx scripts/package.ts <path/to/skill-folder> [output-directory]',
+  );
   console.error('\nExample:');
-  console.error('  bun run tools/package.ts skills/my-skill');
-  console.error('  bun run tools/package.ts skills/my-skill ./dist');
+  console.error('  pnpm exec tsx scripts/package.ts skills/my-skill');
+  console.error('  pnpm exec tsx scripts/package.ts skills/my-skill ./dist');
   process.exit(1);
 }
 

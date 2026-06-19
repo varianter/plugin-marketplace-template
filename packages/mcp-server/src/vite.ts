@@ -5,7 +5,9 @@ import { defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
 export interface WidgetViteConfigOptions {
-  /** Plugin MCP directory. Defaults to `process.cwd()`. */
+  /** Plugin root directory. Defaults to `process.cwd()`. */
+  pluginDir?: string;
+  /** Plugin MCP directory. Defaults to `<pluginDir>/mcp`. */
   mcpDir?: string;
   /** Svelte config path. Defaults to `<mcpDir>/svelte.config.js`. */
   svelteConfigFile?: string;
@@ -13,14 +15,15 @@ export interface WidgetViteConfigOptions {
 
 /** Shared Vite config for single-file MCP widgets discovered by `variant-build-widgets`. */
 export function defineWidgetViteConfig(options: WidgetViteConfigOptions = {}) {
-  const mcpDir = options.mcpDir ?? process.cwd();
+  const pluginDir = options.pluginDir ?? process.cwd();
+  const mcpDir = options.mcpDir ?? resolve(pluginDir, 'mcp');
   const widgetPath = process.env.WIDGET_PATH;
   const widgetName = process.env.WIDGET_NAME;
   if (!widgetPath || !widgetName) {
     throw new Error('WIDGET_PATH and WIDGET_NAME env vars are required');
   }
 
-  const require = createRequire(resolve(mcpDir, 'package.json'));
+  const require = createRequire(resolve(pluginDir, 'package.json'));
   const svelteDir = dirname(require.resolve('svelte/package.json'));
 
   return defineConfig(({ mode }) => ({

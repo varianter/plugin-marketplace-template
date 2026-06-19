@@ -11,7 +11,7 @@ Operational reference for agents (Claude Code, Copilot, etc.) working in this re
 When modifying any skill, always validate before committing:
 
 ```bash
-cd scripts && bun run validate.ts ../plugins/<plugin>/skills/<name>
+cd scripts && pnpm exec tsx validate.ts ../plugins/<plugin>/skills/<name>
 ```
 
 Fix any validation errors before considering the change complete.
@@ -100,7 +100,7 @@ pnpm build               # build @variant/mcp-server then all plugin servers
 pnpm typecheck           # type-check all packages
 pnpm check               # biome lint + format check
 
-# From plugins/standard/mcp/:
+# From plugins/standard/:
 pnpm inspect          # MCP Inspector at http://localhost:6274
 pnpm jam              # MCPJam inspector UI
 ```
@@ -114,7 +114,7 @@ Trigger the **Deploy** GitHub Actions workflow manually. Select a plugin name (o
 
 ### TypeScript compilation
 
-`plugins/<plugin>/mcp/tsconfig.json` uses `rootDir: ".."` (= `plugins/<plugin>/`) so that standalone tool files at `tools/` and skill-colocated tool files at `skills/*/mcp/` are compiled into `mcp/dist/` alongside the server.
+`plugins/<plugin>/tsconfig.json` uses `rootDir: "."` (= `plugins/<plugin>/`) so that standalone tool files at `tools/` and skill-colocated tool files at `skills/*/mcp/` are compiled into `mcp/dist/` alongside the server.
 
 Skill-colocated tools and standalone tools import shared infrastructure from `@variant/mcp-server`:
 

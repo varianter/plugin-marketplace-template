@@ -1,5 +1,4 @@
-import type { McpServer } from '@variant/mcp-server';
-import { getRequestContext } from '@variant/mcp-server';
+import { getRequestContext, type McpServer } from '@variant/mcp-server';
 
 export function registerWhoami(server: McpServer): void {
   server.registerTool(

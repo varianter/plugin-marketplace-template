@@ -4,6 +4,7 @@
 
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { getWidgetHtmlPath, type PluginPathOptions } from './pluginPaths.js';
 
 const require = createRequire(import.meta.url);
 
@@ -36,4 +37,8 @@ function extAppsBundle(): string {
 export function injectExtApps(html: string): string {
   const bundle = extAppsBundle();
   return html.replace('<head>', () => `<head><script type="module">${bundle}</script>`);
+}
+
+export function loadWidgetHtml(widgetName: string, options: PluginPathOptions = {}): string {
+  return injectExtApps(readFileSync(getWidgetHtmlPath(widgetName, options), 'utf8'));
 }

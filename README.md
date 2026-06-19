@@ -17,6 +17,8 @@ cp .env.example .env          # fill in your auth credentials and config
 pnpm install
 ```
 
+Then update `plugin.config.json` with runtime configurations. See below for details.
+
 Run a plugin's MCP server locally:
 
 ```bash
@@ -73,7 +75,7 @@ Skill instructions here.
 Validate it:
 
 ```bash
-cd scripts && bun run validate.ts ../plugins/standard/skills/my-skill
+cd scripts && pnpm exec tsx validate.ts ../plugins/standard/skills/my-skill
 ```
 
 ## Adding an MCP tool
@@ -98,7 +100,7 @@ For skill-colocated tools (tools under a skill's `mcp/` directory) see [`AGENTS.
 ## Adding a new plugin
 
 1. Copy `plugins/standard/` to `plugins/<name>/`
-2. Update `plugins/<name>/.claude-plugin/plugin.json` and `plugins/<name>/mcp/package.json`
+2. Update `plugins/<name>/.claude-plugin/plugin.json` and `plugins/<name>/package.json`
 3. Add the new plugin to `.claude-plugin/marketplace.json`
 4. Add it to the `options` list and matrix in `.github/workflows/deploy.yml`
 
@@ -115,7 +117,7 @@ pnpm check               # biome lint + format check
 pnpm fix                 # biome auto-fix
 ```
 
-Additional commands available from **`plugins/standard/mcp/`**:
+Additional commands available from **`plugins/standard/`**:
 
 ```bash
 pnpm jam           # MCPJam inspector UI

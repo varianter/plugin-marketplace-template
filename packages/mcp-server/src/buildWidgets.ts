@@ -10,8 +10,8 @@ interface WidgetEntry {
 }
 
 const cwd = process.cwd();
-const mcpDir = findMcpDir(cwd);
-const pluginDir = resolve(mcpDir, '..');
+const pluginDir = findPluginDir(cwd);
+const mcpDir = resolve(pluginDir, 'mcp');
 const skillsDir = resolve(pluginDir, 'skills');
 const args = process.argv.slice(2).join(' ');
 
@@ -26,17 +26,19 @@ const viteCommand = existsSync(viteBin) ? viteBin : 'vite';
 
 for (const { name, path: widgetPath } of discoverWidgets(skillsDir)) {
   console.log(`Building widget: ${name}`);
-  execSync(`${viteCommand} build ${args}`, {
-    cwd: mcpDir,
+  execSync(`${viteCommand} build --config ${resolve(mcpDir, 'vite.config.ts')} ${args}`, {
+    cwd: pluginDir,
     env: { ...process.env, WIDGET_PATH: widgetPath, WIDGET_NAME: name },
     stdio: 'inherit',
   });
 }
 
-function findMcpDir(start: string): string {
-  if (existsSync(resolve(start, 'package.json'))) return start;
+function findPluginDir(start: string): string {
+  if (existsSync(resolve(start, 'package.json')) && existsSync(resolve(start, 'mcp'))) return start;
   const maybeParent = resolve(start, '..');
-  if (existsSync(resolve(maybeParent, 'package.json'))) return maybeParent;
+  if (existsSync(resolve(maybeParent, 'package.json')) && existsSync(resolve(maybeParent, 'mcp'))) {
+    return maybeParent;
+  }
   return start;
 }
 

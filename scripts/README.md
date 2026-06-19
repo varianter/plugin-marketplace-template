@@ -1,13 +1,13 @@
 # Tools
 
-CLI scripts for validating and packaging skills. Requires [Bun](https://bun.sh) and the system `zip` utility.
+CLI scripts for validating and packaging skills. Requires Node.js, `tsx`, and the system `zip` utility.
 
 ---
 
 ## validate.ts
 
 ```bash
-bun run tools/validate.ts <path/to/skill-folder>
+pnpm exec tsx scripts/validate.ts <path/to/skill-folder>
 ```
 
 **Checks:**
@@ -31,7 +31,7 @@ Exit `0` on success, `1` on failure.
 ## package.ts
 
 ```bash
-bun run tools/package.ts <path/to/skill-folder> [output-directory]
+pnpm exec tsx scripts/package.ts <path/to/skill-folder> [output-directory]
 ```
 
 Validates the skill, then creates a `<skill-name>.skill` zip archive. Output defaults to the current directory.

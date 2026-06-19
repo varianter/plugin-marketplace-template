@@ -1,6 +1,5 @@
 import type { Server } from 'node:http';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import helmet from 'helmet';
@@ -26,7 +25,7 @@ export { loadServerMetadata } from './config/metadata.js';
 export { log } from './log.js';
 export type { RegisterLocalPluginToolsOptions } from './registerLocalPluginTools.js';
 export { registerLocalPluginTools } from './registerLocalPluginTools.js';
-export { injectExtApps } from './widgets.js';
+export { injectExtApps, loadWidgetHtml } from './widgets.js';
 export type { McpServer };
 
 export interface McpServerConfig {
@@ -37,15 +36,15 @@ export interface McpServerConfig {
 }
 
 export interface PluginMcpServerConfigOptions {
-  /** The plugin entry module URL (`import.meta.url`). Used to derive conventional paths. */
-  importMetaUrl: string;
+  /** Plugin root directory. Defaults to `process.cwd()`. */
+  pluginDir?: string;
   /** Runtime config overrides. Environment variables remain the defaults. */
   runtime?: ConfigOverrides;
   /** Override loaded server metadata. */
   metadata?: Partial<ServerMetadata>;
-  /** Override the default `assets/` directory next to the plugin entry point. */
+  /** Override the default `mcp/assets/` directory under the plugin root. */
   assetsDir?: string;
-  /** Override the default plugin root two directories above the plugin entry point. */
+  /** Override the default plugin root used to find `.claude-plugin/plugin.json`. */
   manifestDir?: string;
 }
 
@@ -58,20 +57,22 @@ export interface McpServerOptions extends PluginMcpServerConfigOptions {
 
 /**
  * Read conventional plugin configuration without starting a server:
- * - dev:  plugins/<plugin>/mcp/src/index.ts
- * - prod: /app/mcp/src/index.js
- * - assets: mcp/src/assets/icon.png
+ * - dev:  plugins/<plugin>/mcp/index.ts with cwd `plugins/<plugin>`
+ * - prod: /app/mcp/index.js with cwd `/app`
+ * - assets: <plugin-root>/mcp/assets/icon.png
  * - manifest: <plugin-root>/.claude-plugin/plugin.json
  */
-export function readPluginMcpServerConfig(options: PluginMcpServerConfigOptions): McpServerConfig {
-  const entryDir = fileURLToPath(new URL('.', options.importMetaUrl));
-  const manifestDir = options.manifestDir ?? join(entryDir, '../..');
+export function readPluginMcpServerConfig(
+  options: PluginMcpServerConfigOptions = {},
+): McpServerConfig {
+  const pluginDir = options.pluginDir ?? process.cwd();
+  const manifestDir = options.manifestDir ?? pluginDir;
   const metadata = loadServerMetadata(manifestDir);
 
   return {
     runtime: loadConfig(options.runtime),
     metadata: { ...metadata, ...options.metadata },
-    assetsDir: options.assetsDir ?? join(entryDir, 'assets'),
+    assetsDir: options.assetsDir ?? join(pluginDir, 'mcp/assets'),
   };
 }
 

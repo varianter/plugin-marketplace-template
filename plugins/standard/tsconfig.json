@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "mcp/dist",
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "svelte": ["node_modules/svelte/index.d.ts"],
+      "zod": ["node_modules/zod/index.d.ts"]
+    }
+  },
+  "include": [
+    "../../types/**/*.d.ts",
+    "mcp/index.ts",
+    "mcp/registerTools.ts",
+    "skills/*/mcp/**/*",
+    "tools/**/*"
+  ],
+  "exclude": ["node_modules", "mcp/dist"]
+}

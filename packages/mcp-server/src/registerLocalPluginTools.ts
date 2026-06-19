@@ -1,17 +1,11 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { basename, join, relative, sep } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { log } from './log.js';
 import type { McpServer } from './mcpEndpoint.js';
 
 export interface RegisterLocalPluginToolsOptions {
-  /**
-   * Root containing this plugin's conventional `tools/` and `skills/` directories.
-   * Defaults to two directories above the caller's module URL, which works for:
-   * - source: plugins/<plugin>/mcp/src/registerTools.ts -> plugins/<plugin>
-   * - dist:   plugins/<plugin>/mcp/dist/mcp/src/registerTools.js -> plugins/<plugin>/mcp/dist
-   * - docker: /app/mcp/src/registerTools.js -> /app
-   */
+  /** Root containing this plugin's conventional `tools/` and `skills/` directories. Defaults to `process.cwd()`. */
   rootDir?: string;
 }
 
@@ -28,17 +22,13 @@ const REGISTER_EXPORT_NAME = /^register[A-Z]/;
  */
 export async function registerLocalPluginTools(
   server: McpServer,
-  importMetaUrl: string,
   options: RegisterLocalPluginToolsOptions = {},
 ): Promise<void> {
-  const entryFile = fileURLToPath(importMetaUrl);
-  const entryDir = fileURLToPath(new URL('.', importMetaUrl));
-  const rootDir = options.rootDir ?? join(entryDir, '../..');
-  const extension = entryFile.endsWith('.ts') ? '.ts' : '.js';
+  const rootDir = options.rootDir ?? process.cwd();
 
   const files = [
-    ...findToolFiles(join(rootDir, 'tools'), extension),
-    ...findToolFiles(join(rootDir, 'skills'), extension, (file) =>
+    ...findToolFiles(join(rootDir, 'tools')),
+    ...findToolFiles(join(rootDir, 'skills'), (file) =>
       relative(join(rootDir, 'skills'), file).split(sep).includes('mcp'),
     ),
   ].sort();
@@ -59,32 +49,29 @@ export async function registerLocalPluginTools(
   }
 }
 
-function findToolFiles(
-  dir: string,
-  extension: '.ts' | '.js',
-  include: (file: string) => boolean = () => true,
-): string[] {
+function findToolFiles(dir: string, include: (file: string) => boolean = () => true): string[] {
   if (!existsSync(dir)) return [];
 
   const files: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
-      files.push(...findToolFiles(path, extension, include));
+      files.push(...findToolFiles(path, include));
       continue;
     }
 
-    if (entry.isFile() && isImportableToolFile(path, extension) && include(path)) {
+    if (entry.isFile() && isImportableToolFile(path) && include(path)) {
       files.push(path);
     }
   }
   return files;
 }
 
-function isImportableToolFile(file: string, extension: '.ts' | '.js'): boolean {
+function isImportableToolFile(file: string): boolean {
   const name = basename(file);
+  const extension = name.endsWith('.ts') ? '.ts' : name.endsWith('.js') ? '.js' : undefined;
   return (
-    file.endsWith(extension) &&
+    extension !== undefined &&
     !name.endsWith('.d.ts') &&
     // Widget browser entrypoints live next to server tool files but must not be imported in Node.
     name !== `app${extension}`
