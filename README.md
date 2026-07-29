@@ -22,8 +22,9 @@ Then update `plugin.config.json` with runtime configurations. See below for deta
 Run a plugin's MCP server locally:
 
 ```bash
-pnpm dev:standard             # hot-reload server + widget watcher
-pnpm dev:server:standard      # server only — faster when not touching widgets
+pnpm dev standard             # hot-reload server + widget watcher
+pnpm dev                      # choose from available plugins
+pnpm dev:server standard      # server only — faster when not touching widgets
 ```
 
 Then update `plugins/standard/.claude-plugin/plugin.json` with your MCP server URL once deployed.
@@ -131,15 +132,16 @@ For skill-colocated tools (tools under a skill's `mcp/` directory) see [`AGENTS.
 1. Copy `plugins/standard/` to `plugins/<name>/`
 2. Update `plugins/<name>/.claude-plugin/plugin.json` and `plugins/<name>/package.json`
 3. Add the new plugin to `.claude-plugin/marketplace.json`
-4. Add it to the `options` list and matrix in `.github/workflows/deploy.yml`
+4. Add it to the plugin matrices in `.github/workflows/ci.yml` and `.github/workflows/deploy.yml`
 
 ## Development commands
 
 From the **repo root**:
 
 ```bash
-pnpm dev:standard        # standard plugin — server + widget watcher (hot-reload)
-pnpm dev:server:standard # standard plugin — server only (faster, skips widgets)
+pnpm dev [plugin]        # selected plugin — server + widget watcher (hot-reload)
+pnpm dev:server [plugin] # selected plugin — server only (faster, skips widgets)
+pnpm dev:standard        # standard plugin alias
 pnpm build               # build all packages in dependency order
 pnpm typecheck           # type-check all packages
 pnpm check               # biome lint + format check

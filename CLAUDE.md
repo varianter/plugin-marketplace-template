@@ -91,13 +91,14 @@ pnpm install                     # install all workspace packages
 cp .env.example .env             # fill in secrets
 
 # From repo root:
-pnpm dev:standard        # standard plugin — hot-reload server + widgets
-pnpm dev:server:standard # standard plugin — hot-reload server only (faster)
+pnpm dev [plugin]        # selected plugin — hot-reload server + widgets
+pnpm dev:server [plugin] # selected plugin — hot-reload server only (faster)
+pnpm dev:standard        # standard plugin alias
 pnpm build               # build @variant/mcp-server then all plugin servers
 pnpm typecheck           # type-check all packages
 pnpm check               # biome lint + format
 
-# Add dev:<name> / dev:server:<name> to root package.json for each new plugin.
+# Add each new plugin to the CI/deploy matrices.
 ```
 
 ## @variant/mcp-server API

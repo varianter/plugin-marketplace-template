@@ -4,8 +4,8 @@
   "packageManager": "pnpm@11.5.2+sha512.71c631e382066efc25625d5cf029075de07b61b37f6e27350fbd84b1bda5864c8c1967adc280776b45c30a715c0359a3be08fef42d5bb09e2b99029979692916",
   "type": "module",
   "scripts": {
-    "dev:standard": "pnpm --filter @variant/plugin-standard run dev",
-    "dev:server:standard": "pnpm --filter @variant/plugin-standard run dev:server",
+    "dev": "tsx ./scripts/run-plugin-script.ts dev",
+    "dev:server": "tsx ./scripts/run-plugin-script.ts dev:server",
     "build": "pnpm --filter @variant/mcp-server run build && pnpm --filter './plugins/*' run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "vitest run",
