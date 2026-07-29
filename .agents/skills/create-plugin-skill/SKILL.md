@@ -46,7 +46,7 @@ Plugin manifests should expose skills with a path such as `"skills": ["./skills"
    2. ...
    3. ...
    ```
-4. Do not create an `mcp/` directory for a skill-only request.
+4. Do not create a `tools/` directory for a skill-only request.
 5. Validate the skill using the repository validator if present. In this template family:
    ```bash
    cd scripts && pnpm exec tsx validate.ts ../plugins/<plugin>/skills/<skill>

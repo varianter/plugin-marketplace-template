@@ -26,7 +26,7 @@ Use this skill when the user asks for:
 3. Explain that the widget is intentionally simple and exists to show the technical wiring:
    - skill instructions in `SKILL.md`
    - auto-discovered tool registration via exported `register*` functions
-   - colocated tool and widget files under this skill's `mcp/` directory
+   - colocated tool and widget files under this skill's `tools/` directory
 
 ```ts
 hello-world-widget({

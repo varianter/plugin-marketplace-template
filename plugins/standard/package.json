@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm build:widgets && concurrently \"pnpm build:widgets -- --watch --mode development\" \"pnpm dev:server\"",
-    "dev:server": "tsx watch --env-file ../../.env mcp/index.ts",
-    "build": "rm -rf mcp/dist && pnpm build:widgets && tsc -p tsconfig.json && cp -r mcp/assets mcp/dist/mcp/assets",
+    "dev:server": "tsx watch --env-file ../../.env mcp-server/index.ts",
+    "build": "rm -rf mcp-server/dist && pnpm build:widgets && tsc -p tsconfig.json && cp -r mcp-server/assets mcp-server/dist/mcp-server/assets",
     "build:widgets": "node ../../packages/mcp-server/dist/buildWidgets.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "start": "node mcp/dist/mcp/index.js",
+    "start": "node mcp-server/dist/mcp-server/index.js",
     "jam": "pnpm dlx @mcpjam/inspector@latest --no-telemetry --config ./mcp.config.json --server plugin-mcp --oauth"
   },
   "dependencies": {

@@ -20,13 +20,13 @@ Use this skill when a skill needs to open an interactive widget. Do not assume a
 ```text
 plugins/<plugin>/skills/<skill>/SKILL.md
 plugins/<plugin>/skills/<skill>/README.md
-plugins/<plugin>/skills/<skill>/mcp/<widget>/<widget>.ts
-plugins/<plugin>/skills/<skill>/mcp/<widget>/index.html
-plugins/<plugin>/skills/<skill>/mcp/<widget>/app.ts
-plugins/<plugin>/skills/<skill>/mcp/<widget>/<widget>.svelte
+plugins/<plugin>/skills/<skill>/tools/<widget>/<widget>.ts
+plugins/<plugin>/skills/<skill>/tools/<widget>/index.html
+plugins/<plugin>/skills/<skill>/tools/<widget>/app.ts
+plugins/<plugin>/skills/<skill>/tools/<widget>/<widget>.svelte
 ```
 
-Best-practice widget builders discover `skills/*/mcp/*/index.html` and output `mcp/dist/widgets/<widget-kebab>/index.html`. If the current repo's widget builder differs, adapt paths while preserving that source-to-built-widget relationship.
+Best-practice widget builders discover `skills/*/tools/*/index.html` and output `mcp-server/dist/widgets/<widget-kebab>/index.html`. If the current repo's widget builder differs, adapt paths while preserving that source-to-built-widget relationship.
 
 ## Steps
 
@@ -50,8 +50,8 @@ Best-practice widget builders discover `skills/*/mcp/*/index.html` and output `m
    ```md
    # <Human Title>
 
-   This skill uses the colocated widget in `mcp/<widget>/`.
-   The widget tool is `<tool>`, implemented by `mcp/<widget>/<widget>.ts` and registered in the plugin MCP tool registration entrypoint.
+   This skill uses the colocated widget in `tools/<widget>/`.
+   The widget tool is `<tool>`, implemented by `tools/<widget>/<widget>.ts` and registered in the plugin MCP tool registration entrypoint.
    The browser bundle is built as widget `<widget-kebab>`.
    ```
 4. Implement `<widget>.ts` with `registerWidgetTool`:
@@ -121,7 +121,7 @@ Best-practice widget builders discover `skills/*/mcp/*/index.html` and output `m
    ```
 8. Register the widget tool in the plugin's MCP registration file. With the template entrypoint pattern:
    ```ts
-   import { registerWidgetCamel } from '../skills/<skill>/mcp/<widget>/<widget>.js';
+   import { registerWidgetCamel } from '../skills/<skill>/tools/<widget>/<widget>.js';
    ```
    Add `registerWidgetCamel` to `definePluginTools([...])`.
 9. Validate and build using current repo commands. Template-family commands:
@@ -134,5 +134,5 @@ Best-practice widget builders discover `skills/*/mcp/*/index.html` and output `m
 
 - `widgetName` must equal the built widget name, normally kebab-case of the widget directory.
 - `uri` should be `ui://widgets/<widget-kebab>`.
-- Do not hardcode `mcp/dist` in the TypeScript registrar; use widget resource metadata.
+- Do not hardcode `mcp-server/dist` in the TypeScript registrar; use widget resource metadata.
 - The widget source directory must contain `index.html`, otherwise best-practice widget discovery will skip it.

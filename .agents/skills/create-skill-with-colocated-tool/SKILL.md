@@ -20,7 +20,7 @@ Use this skill when a skill needs a server-side MCP tool but no UI widget. Inspe
 ```text
 plugins/<plugin>/skills/<skill>/SKILL.md
 plugins/<plugin>/skills/<skill>/README.md
-plugins/<plugin>/skills/<skill>/mcp/<toolCamel>.ts
+plugins/<plugin>/skills/<skill>/tools/<toolCamel>.ts
 ```
 
 ## Steps
@@ -49,7 +49,7 @@ plugins/<plugin>/skills/<skill>/mcp/<toolCamel>.ts
    ```md
    # <Human Title>
 
-   This skill uses the colocated MCP tool `<tool>` located at `mcp/<toolCamel>.ts`.
+   This skill uses the colocated MCP tool `<tool>` located at `tools/<toolCamel>.ts`.
    The tool is registered in the plugin MCP tool registration entrypoint.
    ```
 4. Implement the flat colocated tool:
@@ -77,7 +77,7 @@ plugins/<plugin>/skills/<skill>/mcp/<toolCamel>.ts
    ```
 5. Register it in the plugin's MCP registration file. With the template entrypoint pattern:
    ```ts
-   import { registerToolCamel } from '../skills/<skill>/mcp/<toolCamel>.js';
+   import { registerToolCamel } from '../skills/<skill>/tools/<toolCamel>.js';
    ```
    Add `registerToolCamel` to `definePluginTools([...])`.
 6. Validate and typecheck using current repo commands. Template-family commands:

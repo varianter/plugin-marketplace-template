@@ -44,7 +44,7 @@ export interface PluginMcpServerConfigOptions {
   runtime?: ConfigOverrides;
   /** Override loaded server metadata. */
   metadata?: Partial<ServerMetadata>;
-  /** Override the default `mcp/assets/` directory under the plugin root. */
+  /** Override the default `mcp-server/assets/` directory under the plugin root. */
   assetsDir?: string;
   /** Override the default plugin root used to find `.claude-plugin/plugin.json`. */
   manifestDir?: string;
@@ -64,9 +64,9 @@ export interface McpExpressAppOptions {
 
 /**
  * Read conventional plugin configuration without starting a server:
- * - dev:  plugins/<plugin>/mcp/index.ts with cwd `plugins/<plugin>`
- * - prod: /app/mcp/index.js with cwd `/app`
- * - assets: <plugin-root>/mcp/assets/icon.png
+ * - dev:  plugins/<plugin>/mcp-server/index.ts with cwd `plugins/<plugin>`
+ * - prod: /app/mcp-server/index.js with cwd `/app`
+ * - assets: <plugin-root>/mcp-server/assets/icon.png
  * - manifest: <plugin-root>/.claude-plugin/plugin.json
  */
 export function readPluginMcpServerConfig(
@@ -79,7 +79,7 @@ export function readPluginMcpServerConfig(
   return {
     runtime: loadConfig(options.runtime),
     metadata: { ...metadata, ...options.metadata },
-    assetsDir: options.assetsDir ?? join(pluginDir, 'mcp/assets'),
+    assetsDir: options.assetsDir ?? join(pluginDir, 'mcp-server/assets'),
   };
 }
 

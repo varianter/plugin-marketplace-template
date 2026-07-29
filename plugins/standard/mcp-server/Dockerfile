@@ -12,8 +12,8 @@ COPY packages/ ./packages/
 # Copy plugin manifest before install so pnpm can resolve the workspace package
 COPY plugins/${PLUGIN_NAME}/package.json ./plugins/${PLUGIN_NAME}/package.json
 RUN pnpm install --frozen-lockfile
-# Copy plugin files (MCP server, skills with optional colocated MCP tools, and standalone tools)
-COPY plugins/${PLUGIN_NAME}/mcp/ ./plugins/${PLUGIN_NAME}/mcp/
+# Copy plugin files (MCP server, skills with optional colocated tools, and standalone tools)
+COPY plugins/${PLUGIN_NAME}/mcp-server/ ./plugins/${PLUGIN_NAME}/mcp-server/
 COPY plugins/${PLUGIN_NAME}/skills/ ./plugins/${PLUGIN_NAME}/skills/
 COPY plugins/${PLUGIN_NAME}/tools/ ./plugins/${PLUGIN_NAME}/tools/
 COPY plugins/${PLUGIN_NAME}/tsconfig.json ./plugins/${PLUGIN_NAME}/tsconfig.json
@@ -30,8 +30,8 @@ WORKDIR /app
 ARG PLUGIN_NAME=standard
 # Copy standalone node_modules from deploy bundle (workspace symlinks resolved)
 COPY --from=builder /build/deploy/node_modules/ ./node_modules/
-# Flatten dist output into /app/ so paths match local dev depth (mcp/index.js)
-COPY --from=builder /build/plugins/${PLUGIN_NAME}/mcp/dist/ ./
+# Flatten dist output into /app/ so paths match local dev depth (mcp-server/index.js)
+COPY --from=builder /build/plugins/${PLUGIN_NAME}/mcp-server/dist/ ./
 # Copy public plugin runtime config and manifest (read by the server at startup)
 COPY plugin.config.json ./plugin.config.json
 COPY plugins/${PLUGIN_NAME}/.claude-plugin/ ./.claude-plugin/
@@ -39,4 +39,4 @@ USER mcp
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD node -e "require('http').get('http://localhost:8080/healthz', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
-CMD ["node", "mcp/index.js"]
+CMD ["node", "mcp-server/index.js"]

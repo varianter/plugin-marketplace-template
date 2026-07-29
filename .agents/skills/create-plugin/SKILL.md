@@ -21,7 +21,7 @@ plugins/<plugin>/
   package.json
   tsconfig.json
   mcp.config.json
-  mcp/
+  mcp-server/
     Dockerfile
     index.ts
     vite.config.ts
@@ -31,7 +31,7 @@ plugins/<plugin>/
   tools/
 ```
 
-Shared MCP infrastructure should be imported from `@variant/mcp-server`. Plugin TypeScript should compile with `rootDir: "."` so `tools/` and `skills/*/mcp/` compile into `mcp/dist/`.
+Shared MCP infrastructure should be imported from `@variant/mcp-server`. Plugin TypeScript should compile with `rootDir: "."` so standalone `tools/` and skill-colocated `skills/*/tools/` compile into `mcp-server/dist/`.
 
 ## Steps
 
@@ -47,11 +47,11 @@ Shared MCP infrastructure should be imported from `@variant/mcp-server`. Plugin 
      "type": "module",
      "scripts": {
        "dev": "pnpm build:widgets && concurrently \"pnpm build:widgets -- --watch --mode development\" \"pnpm dev:server\"",
-       "dev:server": "tsx watch --env-file ../../.env mcp/index.ts",
-       "build": "rm -rf mcp/dist && pnpm build:widgets && tsc -p tsconfig.json && cp -r mcp/assets mcp/dist/mcp/assets 2>/dev/null || true",
+       "dev:server": "tsx watch --env-file ../../.env mcp-server/index.ts",
+       "build": "rm -rf mcp-server/dist && pnpm build:widgets && tsc -p tsconfig.json && cp -r mcp-server/assets mcp-server/dist/mcp-server/assets 2>/dev/null || true",
        "build:widgets": "node ../../packages/mcp-server/dist/buildWidgets.js",
        "typecheck": "tsc -p tsconfig.json --noEmit",
-       "start": "node mcp/dist/mcp/index.js",
+       "start": "node mcp-server/dist/mcp-server/index.js",
        "jam": "pnpm dlx @mcpjam/inspector@latest --no-telemetry --config ./mcp.config.json --server plugin-mcp --oauth"
      },
      "dependencies": {
@@ -76,16 +76,16 @@ Shared MCP infrastructure should be imported from `@variant/mcp-server`. Plugin 
      "extends": "../../tsconfig.base.json",
      "compilerOptions": {
        "rootDir": ".",
-       "outDir": "mcp/dist",
+       "outDir": "mcp-server/dist",
        "noEmit": false
      },
-     "include": ["mcp/**/*.ts", "tools/**/*.ts", "skills/**/*.ts"],
-     "exclude": ["mcp/dist", "node_modules", "**/*.svelte"]
+     "include": ["mcp-server/**/*.ts", "tools/**/*.ts", "skills/**/*.ts"],
+     "exclude": ["mcp-server/dist", "node_modules", "**/*.svelte"]
    }
    ```
 6. `.claude-plugin/plugin.json` should include plugin metadata, `"skills": ["./skills"]`, and an HTTP MCP server entry named `plugin-mcp` with URL ending in `/mcp`.
 7. `mcp.config.json` should point local inspectors at `http://127.0.0.1:<port>/mcp` using `streamable-http`.
-8. `mcp/index.ts` should start with no local tools:
+8. `mcp-server/index.ts` should start with no local tools:
    ```ts
    import {
      createAndStartMcpServer,
@@ -96,8 +96,8 @@ Shared MCP infrastructure should be imported from `@variant/mcp-server`. Plugin 
    const config = readPluginMcpServerConfig();
    await createAndStartMcpServer(config, definePluginTools([]));
    ```
-9. `mcp/Dockerfile` should build from the repo root and run the plugin package. Mirror current repo Dockerfile conventions if present; otherwise create a conventional pnpm workspace Dockerfile.
-10. `mcp/vite.config.ts` and `mcp/svelte.config.js` should support widget builds through `WIDGET_PATH` and `WIDGET_NAME`. Prefer copying the current best-practice Vite/Svelte config from any existing plugin only as a convention reference, not as a dependency.
+9. `mcp-server/Dockerfile` should build from the repo root and run the plugin package. Mirror current repo Dockerfile conventions if present; otherwise create a conventional pnpm workspace Dockerfile.
+10. `mcp-server/vite.config.ts` and `mcp-server/svelte.config.js` should support widget builds through `WIDGET_PATH` and `WIDGET_NAME`. Prefer copying the current best-practice Vite/Svelte config from any existing plugin only as a convention reference, not as a dependency.
 11. Update root `package.json` scripts if the repo uses per-plugin scripts:
     - `dev:<plugin>`
     - `dev:server:<plugin>`

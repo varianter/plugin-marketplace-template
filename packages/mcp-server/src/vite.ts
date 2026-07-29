@@ -7,16 +7,16 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 export interface WidgetViteConfigOptions {
   /** Plugin root directory. Defaults to `process.cwd()`. */
   pluginDir?: string;
-  /** Plugin MCP directory. Defaults to `<pluginDir>/mcp`. */
-  mcpDir?: string;
-  /** Svelte config path. Defaults to `<mcpDir>/svelte.config.js`. */
+  /** Plugin MCP server directory. Defaults to `<pluginDir>/mcp-server`. */
+  mcpServerDir?: string;
+  /** Svelte config path. Defaults to `<mcpServerDir>/svelte.config.js`. */
   svelteConfigFile?: string;
 }
 
 /** Shared Vite config for single-file MCP widgets discovered by `variant-build-widgets`. */
 export function defineWidgetViteConfig(options: WidgetViteConfigOptions = {}) {
   const pluginDir = options.pluginDir ?? process.cwd();
-  const mcpDir = options.mcpDir ?? resolve(pluginDir, 'mcp');
+  const mcpServerDir = options.mcpServerDir ?? resolve(pluginDir, 'mcp-server');
   const widgetPath = process.env.WIDGET_PATH;
   const widgetName = process.env.WIDGET_NAME;
   if (!widgetPath || !widgetName) {
@@ -42,12 +42,12 @@ export function defineWidgetViteConfig(options: WidgetViteConfigOptions = {}) {
       ],
     },
     plugins: [
-      svelte({ configFile: options.svelteConfigFile ?? resolve(mcpDir, 'svelte.config.js') }),
+      svelte({ configFile: options.svelteConfigFile ?? resolve(mcpServerDir, 'svelte.config.js') }),
       viteSingleFile(),
     ],
     build: {
       rollupOptions: { input: 'index.html' },
-      outDir: resolve(mcpDir, 'dist', 'widgets', widgetName),
+      outDir: resolve(mcpServerDir, 'dist', 'widgets', widgetName),
       emptyOutDir: false,
       sourcemap: mode === 'development',
       minify: mode !== 'development',

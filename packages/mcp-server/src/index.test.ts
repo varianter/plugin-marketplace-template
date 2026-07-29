@@ -36,7 +36,7 @@ function testConfig(): McpServerConfig {
       version: '0.0.0',
       websiteUrl: undefined,
     },
-    assetsDir: resolve('plugins/standard/mcp/assets'),
+    assetsDir: resolve('plugins/standard/mcp-server/assets'),
   };
 }
 

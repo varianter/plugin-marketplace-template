@@ -20,7 +20,7 @@ Use this skill for an MCP tool that is not tied to a skill. Do not assume the re
 plugins/<plugin>/tools/<tool-kebab>/<toolCamel>.ts
 ```
 
-The tool must be registered in the plugin MCP server entrypoint, usually `plugins/<plugin>/mcp/index.ts` or the current repo's equivalent tool-registration file.
+The tool must be registered in the plugin MCP server entrypoint, usually `plugins/<plugin>/mcp-server/index.ts` or the current repo's equivalent tool-registration file.
 
 ## Steps
 

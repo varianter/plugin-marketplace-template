@@ -5,7 +5,7 @@ import {
 } from '@variant/mcp-server';
 
 // List of tools
-import { registerHelloWorld } from '../skills/hello-world/mcp/helloWorld/helloWorld.js';
+import { registerHelloWorld } from '../skills/hello-world/tools/helloWorld/helloWorld.js';
 import { registerWhoami } from '../tools/whoami/whoami.js';
 
 const config = readPluginMcpServerConfig();

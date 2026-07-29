@@ -17,7 +17,7 @@ export interface WidgetResourceDefinition {
   title: string;
   /** Explicit MCP UI resource URI. Example: `ui://widgets/hello-world`. */
   uri: string;
-  /** Built widget directory name under `mcp/dist/widgets/<widgetName>/index.html`. */
+  /** Built widget directory name under `mcp-server/dist/widgets/<widgetName>/index.html`. */
   widgetName: string;
   /** Optional resource metadata, for example CSP configuration. */
   config?: McpUiAppResourceConfig;

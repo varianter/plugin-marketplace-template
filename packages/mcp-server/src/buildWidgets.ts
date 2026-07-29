@@ -11,7 +11,7 @@ interface WidgetEntry {
 
 const cwd = process.cwd();
 const pluginDir = findPluginDir(cwd);
-const mcpDir = resolve(pluginDir, 'mcp');
+const mcpServerDir = resolve(pluginDir, 'mcp-server');
 const skillsDir = resolve(pluginDir, 'skills');
 const args = process.argv.slice(2).join(' ');
 
@@ -26,7 +26,7 @@ const viteCommand = existsSync(viteBin) ? viteBin : 'vite';
 
 for (const { name, path: widgetPath } of discoverWidgets(skillsDir)) {
   console.log(`Building widget: ${name}`);
-  execSync(`${viteCommand} build --config ${resolve(mcpDir, 'vite.config.ts')} ${args}`, {
+  execSync(`${viteCommand} build --config ${resolve(mcpServerDir, 'vite.config.ts')} ${args}`, {
     cwd: pluginDir,
     env: { ...process.env, WIDGET_PATH: widgetPath, WIDGET_NAME: name },
     stdio: 'inherit',
@@ -34,9 +34,14 @@ for (const { name, path: widgetPath } of discoverWidgets(skillsDir)) {
 }
 
 function findPluginDir(start: string): string {
-  if (existsSync(resolve(start, 'package.json')) && existsSync(resolve(start, 'mcp'))) return start;
+  if (existsSync(resolve(start, 'package.json')) && existsSync(resolve(start, 'mcp-server'))) {
+    return start;
+  }
   const maybeParent = resolve(start, '..');
-  if (existsSync(resolve(maybeParent, 'package.json')) && existsSync(resolve(maybeParent, 'mcp'))) {
+  if (
+    existsSync(resolve(maybeParent, 'package.json')) &&
+    existsSync(resolve(maybeParent, 'mcp-server'))
+  ) {
     return maybeParent;
   }
   return start;
@@ -46,10 +51,10 @@ function discoverWidgets(root: string): WidgetEntry[] {
   const widgets: WidgetEntry[] = [];
   try {
     for (const skill of readdirSync(root)) {
-      const skillMcpDir = resolve(root, skill, 'mcp');
-      if (!isDirectory(skillMcpDir)) continue;
-      for (const entry of readdirSync(skillMcpDir)) {
-        const widgetDir = resolve(skillMcpDir, entry);
+      const skillToolsDir = resolve(root, skill, 'tools');
+      if (!isDirectory(skillToolsDir)) continue;
+      for (const entry of readdirSync(skillToolsDir)) {
+        const widgetDir = resolve(skillToolsDir, entry);
         if (isDirectory(widgetDir) && existsSync(resolve(widgetDir, 'index.html'))) {
           widgets.push({ name: toKebabCase(entry), path: widgetDir });
         }

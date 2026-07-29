@@ -27,6 +27,13 @@ pnpm dev                      # choose from available plugins
 pnpm dev:server standard      # server only — faster when not touching widgets
 ```
 
+When having multiple plugins, you can run
+```bash
+pnpm dev <plugin>             # hot-reload server + widget watcher
+pnpm dev:server <plugin>      # server only — faster when not touching widgets
+```
+
+
 Then update `plugins/standard/.claude-plugin/plugin.json` with your MCP server URL once deployed.
 
 ## Configuration
@@ -70,10 +77,10 @@ plugins/
   standard/          ← starter plugin (copy this to add a new plugin)
     .claude-plugin/
       plugin.json    ← plugin manifest (skills paths, MCP server URL)
-    skills/          ← skills; each skill may optionally contain an mcp/ directory for colocated tools
-    skills/*/mcp     ← MCP tools colocated with a skill (optional)
+    skills/          ← skills; each skill may optionally contain a tools/ directory for colocated tools
+    skills/*/tools   ← MCP tools colocated with a skill (optional)
     tools/           ← standalone MCP tools (not tied to a skill)
-    mcp/             ← deployable MCP HTTP server for this plugin
+    mcp-server/      ← deployable MCP HTTP server for this plugin
 .claude-plugin/
   marketplace.json   ← repo-level manifest listing all plugins
 scripts/             ← skill validator and packaging tools
@@ -82,7 +89,7 @@ plugin.config.json   ← committed runtime defaults for MCP servers
 
 ## Adding a skill
 
-Create `plugins/standard/skills/<name>/SKILL.md`. If the skill needs MCP tools, add them under `plugins/standard/skills/<name>/mcp/`:
+Create `plugins/standard/skills/<name>/SKILL.md`. If the skill needs MCP tools, add them under `plugins/standard/skills/<name>/tools/`:
 
 ```
 ---
@@ -116,7 +123,7 @@ export function registerMyTool(server: McpServer): void {
 }
 ```
 
-Then add it to `plugins/standard/mcp/registerTools.ts`:
+Then add it to `plugins/standard/mcp-server/registerTools.ts`:
 
 ```typescript
 import { definePluginTools } from '@variant/mcp-server';
@@ -125,7 +132,7 @@ import { registerMyTool } from '../tools/my-tool/myTool.js';
 export const registerTools = definePluginTools([registerMyTool]);
 ```
 
-For skill-colocated tools (tools under a skill's `mcp/` directory) see [`AGENTS.md`](AGENTS.md).
+For skill-colocated tools (tools under a skill's `tools/` directory) see [`AGENTS.md`](AGENTS.md).
 
 ## Adding a new plugin
 
@@ -157,7 +164,7 @@ pnpm inspect       # official MCP Inspector
 
 ## Deployment
 
-Trigger the **Deploy** GitHub Actions workflow from the repository UI. Select a plugin (or "all") and environment. Each plugin has its own Docker image (`<plugin>-mcp`) built from `plugins/<plugin>/mcp/Dockerfile`.
+Trigger the **Deploy** GitHub Actions workflow from the repository UI. Select a plugin (or "all") and environment. Each plugin has its own Docker image (`<plugin>-mcp`) built from `plugins/<plugin>/mcp-server/Dockerfile`.
 
 Update the registry and deployment target in `.github/workflows/deploy.yml` to match your infrastructure.
 

@@ -24,11 +24,11 @@ Fix any validation errors before considering the change complete.
 
 All tools import shared infrastructure from `@variant/mcp-server`, not from relative paths.
 
-**Skill-colocated tool** (tool lives under a skill in `plugins/<plugin>/skills/<name>/mcp/`):
+**Skill-colocated tool** (tool lives under a skill in `plugins/<plugin>/skills/<name>/tools/`):
 
 Without widget — flat file:
 
-1. Create `plugins/<plugin>/skills/<name>/mcp/<toolName>.ts` exporting a registrar function:
+1. Create `plugins/<plugin>/skills/<name>/tools/<toolName>.ts` exporting a registrar function:
 
 ```typescript
 import type { McpServer } from '@variant/mcp-server';
@@ -53,16 +53,16 @@ export function registerMyTool(server: McpServer): void {
 
 With widget — colocated directory:
 
-1. Create `plugins/<plugin>/skills/<name>/mcp/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
-2. Load the compiled widget from `../../../../mcp/dist/widgets/<tool-name-kebab>/index.html`
-3. The widget build script discovers any `skills/*/mcp/*/index.html` for browser bundles
-4. Import the server-side registrar in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
+1. Create `plugins/<plugin>/skills/<name>/tools/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
+2. Load the compiled widget from `../../../../mcp-server/dist/widgets/<tool-name-kebab>/index.html`
+3. The widget build script discovers any `skills/*/tools/*/index.html` for browser bundles
+4. Import the server-side registrar in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
 
 **Standalone tool** (not tied to a skill):
 
 1. Create `plugins/<plugin>/tools/<toolName>/<toolName>.ts` with the same pattern
 2. Export a `register<ToolName>(server: McpServer): void` function
-3. Import it in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
+3. Import it in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
 
 **Error handling:** Return tool-level errors as `{ content: [{ type: 'text', text: 'Error: ...' }], isError: true }`. Throw only for unexpected infrastructure failures.
 
@@ -109,13 +109,13 @@ pnpm jam              # MCPJam inspector UI
 ### Deployment
 
 Trigger the **Deploy** GitHub Actions workflow manually. Select a plugin name (or "all") and environment. It:
-1. Builds the Docker image using `plugins/<plugin>/mcp/Dockerfile` with the repo root as context
+1. Builds the Docker image using `plugins/<plugin>/mcp-server/Dockerfile` with the repo root as context
 2. Pushes to ACR (`<plugin>-mcp` image name)
 3. Updates the GitOps deployment target
 
 ### TypeScript compilation
 
-`plugins/<plugin>/tsconfig.json` uses `rootDir: "."` (= `plugins/<plugin>/`) so that standalone tool files at `tools/` and skill-colocated tool files at `skills/*/mcp/` are compiled into `mcp/dist/` alongside the server.
+`plugins/<plugin>/tsconfig.json` uses `rootDir: "."` (= `plugins/<plugin>/`) so that standalone tool files at `tools/` and skill-colocated tool files at `skills/*/tools/` are compiled into `mcp-server/dist/` alongside the server.
 
 Skill-colocated tools and standalone tools import shared infrastructure from `@variant/mcp-server`:
 

@@ -17,7 +17,7 @@ plugins/
     skills/          ← Skills; each skill may optionally contain colocated MCP tools
       <name>/
         SKILL.md
-        mcp/                  ← Optional MCP tools for this skill
+        tools/                ← Optional MCP tools for this skill
           <toolName>/          ← Tool + widget (when it has an interactive widget)
             <toolName>.ts
             index.html
@@ -30,7 +30,7 @@ plugins/
         <toolName>.ts
     package.json     ← @variant/plugin-standard (pnpm workspace package)
     tsconfig.json
-    mcp/             ← Plugin-specific MCP server
+    mcp-server/      ← Plugin-specific MCP server
       index.ts       ← Entry point — calls @variant/mcp-server
       registerTools.ts ← Explicit manifest for this plugin's tools
       assets/        ← Static assets (icon.png)
@@ -55,7 +55,7 @@ tsconfig.base.json   ← Shared TypeScript base config
 
 1. Add a new directory under `plugins/<plugin>/skills/<name>/`
 2. Create `SKILL.md` with `name` and `description` frontmatter
-3. Add `references/`, `assets/`, `scripts/`, or an optional `mcp/` directory as needed
+3. Add `references/`, `assets/`, `scripts/`, or an optional `tools/` directory as needed
 4. Run validation: `cd scripts && pnpm exec tsx validate.ts ../plugins/<plugin>/skills/<name>`
 
 ## Creating a new MCP tool
@@ -64,25 +64,25 @@ Tools import shared infrastructure from `@variant/mcp-server` (not relative path
 
 Skill-colocated tool, **without** widget:
 
-1. Add `plugins/<plugin>/skills/<skill-name>/mcp/<toolName>.ts`
+1. Add `plugins/<plugin>/skills/<skill-name>/tools/<toolName>.ts`
 2. Import: `import type { McpServer } from '@variant/mcp-server'`
 3. Export a `register<ToolName>(server: McpServer): void` function
-4. Import it in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
+4. Import it in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
 
 Skill-colocated tool **with** an interactive widget:
 
-1. Create `plugins/<plugin>/skills/<skill-name>/mcp/<toolName>/` directory
+1. Create `plugins/<plugin>/skills/<skill-name>/tools/<toolName>/` directory
 2. Add `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte` inside it
 3. Load the compiled widget with `loadWidgetHtml('<tool-name-kebab>')` from `@variant/mcp-server`
 4. Export a `register<ToolName>(server: McpServer): void` function
-5. Import it in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
-6. The Vite build discovers `skills/*/mcp/*/index.html` automatically
+5. Import it in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
+6. The Vite build discovers `skills/*/tools/*/index.html` automatically
 
 Standalone tool (not tied to a skill):
 
 1. Add `plugins/<plugin>/tools/<toolName>/<toolName>.ts`
 2. Export a `register<ToolName>(server: McpServer): void` function
-3. Import it in `plugins/<plugin>/mcp/registerTools.ts` and add it to `localTools`
+3. Import it in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
 
 ## MCP local development
 
@@ -118,7 +118,7 @@ import type { McpServer, RequestContext, ServerMetadata, Config } from '@variant
 
 ## Deployment
 
-Trigger the **Deploy** GitHub Actions workflow from the repository UI. Select a plugin (or "all") and environment. The workflow builds the Docker image from `plugins/<plugin>/mcp/Dockerfile` with the repo root as build context.
+Trigger the **Deploy** GitHub Actions workflow from the repository UI. Select a plugin (or "all") and environment. The workflow builds the Docker image from `plugins/<plugin>/mcp-server/Dockerfile` with the repo root as build context.
 
 Each plugin's image name is `<plugin>-mcp` (e.g. `standard-mcp`).
 

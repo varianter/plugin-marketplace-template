@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "mcp/dist",
+    "outDir": "mcp-server/dist",
     "baseUrl": ".",
     "ignoreDeprecations": "6.0",
     "paths": {
@@ -12,10 +12,10 @@
   },
   "include": [
     "../../types/**/*.d.ts",
-    "mcp/index.ts",
-    "mcp/registerTools.ts",
-    "skills/*/mcp/**/*",
+    "mcp-server/index.ts",
+    "mcp-server/registerTools.ts",
+    "skills/*/tools/**/*",
     "tools/**/*"
   ],
-  "exclude": ["node_modules", "mcp/dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "mcp-server/dist", "**/*.test.ts"]
 }
