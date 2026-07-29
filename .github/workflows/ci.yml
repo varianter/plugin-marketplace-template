@@ -58,7 +58,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Docker image
-        run: docker build -f plugins/${{ matrix.plugin }}/mcp/Dockerfile -t ${{ matrix.plugin }}-mcp:test .
+        run: docker build -f plugins/${{ matrix.plugin }}/mcp-server/Dockerfile -t ${{ matrix.plugin }}-mcp:test .
 
       - name: Run container
         run: |

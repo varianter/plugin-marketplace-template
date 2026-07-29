@@ -49,7 +49,7 @@ jobs:
       acr-url: example.azurecr.io
       image-name: ${{ matrix.plugin }}-mcp
       docker-context: .
-      dockerfile: ./plugins/${{ matrix.plugin }}/mcp/Dockerfile
+      dockerfile: ./plugins/${{ matrix.plugin }}/mcp-server/Dockerfile
       gitops-directory-path: deployments/${{ inputs.environment || 'prod' }}/workloads/${{ matrix.plugin }}-mcp
       gitops-workload-name: ${{ matrix.plugin }}-mcp
       gitops-file-to-update: values.yaml

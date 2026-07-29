@@ -134,12 +134,17 @@ export const registerTools = definePluginTools([registerMyTool]);
 
 For skill-colocated tools (tools under a skill's `tools/` directory) see [`AGENTS.md`](AGENTS.md).
 
+Note: You can also use the `create-plugin-skill` skill in `.agents/skills/create-plugin-skill/SKILL.md` to generate a new skill directory with the correct structure.
+
 ## Adding a new plugin
 
 1. Copy `plugins/standard/` to `plugins/<name>/`
 2. Update `plugins/<name>/.claude-plugin/plugin.json` and `plugins/<name>/package.json`
 3. Add the new plugin to `.claude-plugin/marketplace.json`
 4. Add it to the plugin matrices in `.github/workflows/ci.yml` and `.github/workflows/deploy.yml`
+
+
+Note: You can also use the `create-plugin` skill in `.agents/skills/create-plugin/SKILL.md` to generate a new plugin directory with the correct structure.
 
 ## Development commands
 
