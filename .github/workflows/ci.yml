@@ -34,8 +34,14 @@ jobs:
         run: pnpm test
 
   docker-smoke:
-    name: Docker smoke test
+    name: Docker smoke test (${{ matrix.plugin }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin:
+          - standard
+          # Add new plugins here as they are created under plugins/
 
     steps:
       - uses: actions/checkout@v4
@@ -52,15 +58,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Docker image
-        run: docker build -f plugins/standard/mcp/Dockerfile -t standard-mcp:test .
+        run: docker build -f plugins/${{ matrix.plugin }}/mcp/Dockerfile -t ${{ matrix.plugin }}-mcp:test .
 
       - name: Run container
         run: |
-          docker run -d --name standard-mcp -p 8080:8080 \
+          docker run -d --name ${{ matrix.plugin }}-mcp -p 8080:8080 \
             -e HOST=0.0.0.0 \
             -e PORT=8080 \
             -e AUTH_ENABLED=false \
-            standard-mcp:test
+            ${{ matrix.plugin }}-mcp:test
 
       - name: Health check
         run: |
@@ -68,7 +74,7 @@ jobs:
             curl -fsS http://127.0.0.1:8080/healthz && exit 0
             sleep 1
           done
-          docker logs standard-mcp
+          docker logs ${{ matrix.plugin }}-mcp
           exit 1
 
   quality:

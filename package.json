@@ -6,7 +6,7 @@
   "scripts": {
     "dev:standard": "pnpm --filter @variant/plugin-standard run dev",
     "dev:server:standard": "pnpm --filter @variant/plugin-standard run dev:server",
-    "build": "pnpm --filter @variant/mcp-server run build && pnpm --filter @variant/plugin-standard run build",
+    "build": "pnpm --filter @variant/mcp-server run build && pnpm --filter './plugins/*' run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
