@@ -1,4 +1,4 @@
-# claude-plugin-template
+# plugin-marketplace-template
 
 A multi-plugin workspace for building [Claude Code](https://claude.ai/claude-code) plugins with skills, MCP tools, and an OAuth-protected HTTP server — ready to deploy to any cloud.
 
@@ -11,8 +11,8 @@ A multi-plugin workspace for building [Claude Code](https://claude.ai/claude-cod
 ## Getting started
 
 ```bash
-git clone https://github.com/varianter/claude-plugin-template
-cd claude-plugin-template
+git clone https://github.com/varianter/plugin-marketplace-template
+cd plugin-marketplace-template
 cp .env.example .env          # fill in your auth credentials and config
 pnpm install
 ```

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
-  "name": "claude-plugin-template",
+  "name": "plugin-marketplace-template",
   "version": "0.1.0",
   "description": "Claude Code plugin template — skills, MCP tools, and deployment workflows",
   "skills": ["./skills"],
   "license": "MIT",
-  "homepage": "https://github.com/example/claude-plugin-template",
-  "repository": "https://github.com/example/claude-plugin-template",
+  "homepage": "https://github.com/example/plugin-marketplace-template",
+  "repository": "https://github.com/example/plugin-marketplace-template",
   "mcpServers": {
     "plugin-mcp": {
       "type": "http",

@@ -1,4 +1,4 @@
-# Claude Code Plugin Template
+# Claude Code Plugin Marketplace Template
 
 Multi-plugin workspace for building Claude Code plugins with skills, MCP tools, and deployment workflows.
 
