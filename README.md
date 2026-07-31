@@ -2,6 +2,19 @@
 
 A multi-plugin workspace for building [Claude Code](https://claude.ai/claude-code) plugins with skills, MCP tools, and an OAuth-protected HTTP server, ready to deploy to any cloud.
 
+## Use skills from this template
+
+You can use skills from plugins in this repo by connecting marketplace to Claude, or adding the skills specifically:
+
+```
+npx skills add varianter/plugin-marketplace-template
+
+# list all
+npx skills add varianter/plugin-marketplace-template --list
+```
+
+Keep in mind that if you add a skill that refers to MCP tools outside of Claude marketplace, you would have to connect to MCP server manually.
+
 ## What's included
 
 - **`@variant/mcp-server`** — npm package for shared MCP infrastructure: Express server, OAuth/OIDC auth, session management, widget support
