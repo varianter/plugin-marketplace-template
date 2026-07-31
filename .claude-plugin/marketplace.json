@@ -7,16 +7,27 @@
     "name": "Example Organization",
     "url": "https://example.com"
   },
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
   "plugins": [
     {
-      "name": "example-plugin",
-      "source": "./plugins/example-plugin",
+      "name": "plugin-marketplace-template",
+      "source": "./plugins/standard/",
       "version": "0.1.0",
-      "description": "Example plugin entry for marketplace configuration",
+      "description": "Claude Code plugin template — skills, MCP tools, and deployment workflows",
+      "skills": [
+        "./skills"
+      ],
       "license": "MIT",
-      "homepage": "https://example.com/example-plugin",
-      "repository": "https://github.com/example/example-plugin",
-      "category": "productivity"
+      "homepage": "https://github.com/varianter/plugin-marketplace-template",
+      "repository": "https://github.com/varianter/plugin-marketplace-template",
+      "mcpServers": {
+        "plugin-mcp": {
+          "type": "http",
+          "url": "https://your-mcp-server.example.com/mcp"
+        }
+      }
     }
   ]
 }

@@ -1,6 +1,6 @@
 # plugin-marketplace-template
 
-A multi-plugin workspace for building [Claude Code](https://claude.ai/claude-code) plugins with skills, MCP tools, and an OAuth-protected HTTP server — ready to deploy to any cloud.
+A multi-plugin workspace for building [Claude Code](https://claude.ai/claude-code) plugins with skills, MCP tools, and an OAuth-protected HTTP server, ready to deploy to any cloud.
 
 ## What's included
 
