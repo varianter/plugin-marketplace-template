@@ -27,8 +27,7 @@ plugins/
     package.json     ← @variant/plugin-standard (pnpm workspace package)
     tsconfig.json
     mcp-server/      ← Plugin-specific MCP server
-      index.ts       ← Entry point — calls @variant/mcp-server
-      registerTools.ts ← Explicit manifest for this plugin's tools
+      index.ts       ← Entry point — calls @variant/mcp-server, lists tools via definePluginTools([...])
       assets/        ← Static assets (icon.png)
       Dockerfile
 
@@ -63,7 +62,7 @@ Skill-colocated tool, **without** widget:
 1. Add `plugins/<plugin>/skills/<skill-name>/tools/<toolName>.ts`
 2. Import: `import type { McpServer } from '@variant/mcp-server'`
 3. Export a `register<ToolName>(server: McpServer): void` function
-4. Import it in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
+4. Import it in `plugins/<plugin>/mcp-server/index.ts` and add it to the `definePluginTools([...])` list
 
 Skill-colocated tool **with** an interactive widget:
 
@@ -71,14 +70,14 @@ Skill-colocated tool **with** an interactive widget:
 2. Add `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte` inside it
 3. Load the compiled widget with `loadWidgetHtml('<tool-name-kebab>')` from `@variant/mcp-server`
 4. Export a `register<ToolName>(server: McpServer): void` function
-5. Import it in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
+5. Import it in `plugins/<plugin>/mcp-server/index.ts` and add it to the `definePluginTools([...])` list
 6. The Vite build discovers `skills/*/tools/*/index.html` automatically
 
 Standalone tool (not tied to a skill):
 
 1. Add `plugins/<plugin>/tools/<toolName>/<toolName>.ts`
 2. Export a `register<ToolName>(server: McpServer): void` function
-3. Import it in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
+3. Import it in `plugins/<plugin>/mcp-server/index.ts` and add it to the `definePluginTools([...])` list
 
 ## MCP local development
 

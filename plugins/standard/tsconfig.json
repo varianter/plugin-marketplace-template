@@ -13,7 +13,6 @@
   "include": [
     "../../types/**/*.d.ts",
     "mcp-server/index.ts",
-    "mcp-server/registerTools.ts",
     "skills/*/tools/**/*",
     "tools/**/*"
   ],

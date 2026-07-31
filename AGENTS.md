@@ -56,13 +56,13 @@ With widget — colocated directory:
 1. Create `plugins/<plugin>/skills/<name>/tools/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
 2. Register the widget with `registerWidgetTool` or load compiled widget HTML with `loadWidgetHtml('<tool-name-kebab>')` from `@variant/mcp-server`
 3. `pnpm exec variant-build-widgets` discovers any `skills/*/tools/*/index.html` for browser bundles
-4. Import the server-side registrar in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
+4. Import the server-side registrar in `plugins/<plugin>/mcp-server/index.ts` and add it to the `definePluginTools([...])` list
 
 **Standalone tool** (not tied to a skill):
 
 1. Create `plugins/<plugin>/tools/<toolName>/<toolName>.ts` with the same pattern
 2. Export a `register<ToolName>(server: McpServer): void` function
-3. Import it in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
+3. Import it in `plugins/<plugin>/mcp-server/index.ts` and add it to the `definePluginTools([...])` list
 
 **Error handling:** Return tool-level errors as `{ content: [{ type: 'text', text: 'Error: ...' }], isError: true }`. Throw only for unexpected infrastructure failures.
 
