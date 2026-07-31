@@ -13,12 +13,10 @@
   "plugins": [
     {
       "name": "plugin-marketplace-template",
-      "source": "./plugins/standard/",
+      "displayName": "Plugin Marketplace Template",
+      "source": "./standard",
       "version": "0.1.0",
       "description": "Claude Code plugin template — skills, MCP tools, and deployment workflows",
-      "skills": [
-        "./skills"
-      ],
       "license": "MIT",
       "homepage": "https://github.com/varianter/plugin-marketplace-template",
       "repository": "https://github.com/varianter/plugin-marketplace-template",
