@@ -52,7 +52,7 @@ tsconfig.base.json   ← Shared TypeScript base config
 1. Add a new directory under `plugins/<plugin>/skills/<name>/`
 2. Create `SKILL.md` with `name` and `description` frontmatter
 3. Add `references/`, `assets/`, `scripts/`, or an optional `tools/` directory as needed
-4. Run validation: `cd scripts && pnpm exec tsx validate.ts ../plugins/<plugin>/skills/<name>`
+4. Run validation: `pnpm validate-skill plugins/<plugin>/skills/<name>`
 
 ## Creating a new MCP tool
 

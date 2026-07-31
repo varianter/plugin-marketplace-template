@@ -234,7 +234,7 @@ const isMain = resolve(process.argv[1] ?? '') === fileURLToPath(import.meta.url)
 if (isMain) {
   const args = process.argv.slice(2);
   if (args.length > 1) {
-    console.error('Usage: pnpm exec tsx validate.ts [skill_directory]');
+    console.error('Usage: pnpm validate-skill [skill_directory]');
     process.exit(1);
   }
 

@@ -15,7 +15,8 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "fix": "biome check . --fix",
-    "validate-skills": "tsx ./scripts/validate.ts"
+    "validate-skills": "tsx ./scripts/validate.ts",
+    "validate-skill": "tsx ./scripts/validate.ts"
   },
   "devDependencies": {
     "@azure/identity": "4.13.1",

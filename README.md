@@ -73,7 +73,7 @@ Skill instructions here.
 Validate it:
 
 ```bash
-cd scripts && pnpm exec tsx validate.ts ../plugins/standard/skills/my-skill
+pnpm validate-skill plugins/standard/skills/my-skill
 ```
 
 ## Adding an MCP tool
@@ -128,6 +128,8 @@ pnpm build               # build all plugin servers
 pnpm typecheck           # type-check workspace packages
 pnpm check               # biome lint + format check
 pnpm fix                 # biome auto-fix
+pnpm validate-skills      # validate all skills
+pnpm validate-skill <path> # validate a single skill, e.g. plugins/standard/skills/my-skill
 ```
 
 Additional commands available from **`plugins/standard/`**:
