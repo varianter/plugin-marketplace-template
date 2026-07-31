@@ -17,7 +17,7 @@ cp .env.example .env          # fill in your auth credentials and config
 pnpm install
 ```
 
-Then update `plugin.config.json` with runtime configurations. See below for details.
+Then update `plugins/standard/mcp-server.config.json` with runtime configurations. See below for details.
 
 Run a plugin's MCP server locally:
 
@@ -38,13 +38,12 @@ Then update `plugins/standard/.claude-plugin/plugin.json` with your MCP server U
 
 ## Configuration
 
-Runtime defaults live in [`plugin.config.json`](plugin.config.json). Environment variables override these values at runtime. Commit only safe, shared defaults; put secrets and environment-specific values in `.env`, `plugin.config.local.json` (gitignored), or your deployment environment.
+Runtime defaults live in [`plugins/standard/mcp-server.config.json`](plugins/standard/mcp-server.config.json) — the file is found by walking up from the server process's working directory, so keep it at the plugin root. Environment variables override these values at runtime. Commit only safe, shared defaults; put secrets and environment-specific values in `.env`, `mcp-server.config.local.json` (gitignored), or your deployment environment.
 
 Safe to commit as shared defaults:
 
 - `mcpPath` — HTTP endpoint path for MCP requests; clients must use this route.
-- `auth.enabled` — turns OAuth/OIDC protection on or off; needed to require authenticated access.
-- `auth.provider` — identity provider type (`entra`, `auth0`, `okta`, etc.); needed for provider-specific OAuth metadata.
+- `auth.provider` — identity provider type (`none`, `entra`, `auth0`, `okta`, etc.); there's no separate on/off flag — naming a real provider is what turns auth on, `none` (the default) disables it.
 - `auth.scopes` — scopes requested during login; needed to control what access tokens can contain.
 - `auth.scopeAliases` — extra scope names mapped for Entra compatibility; needed for Claude/MCP client interoperability.
 - `auth.compatibilityProxy` — enables compatibility OAuth endpoints; needed for clients that cannot use the provider directly.
@@ -64,9 +63,9 @@ Can be committed if shared across deployments; otherwise set via environment:
 
 Environment-only secrets:
 
-- `AUTH_CLIENT_SECRET` — OAuth client secret; required only for confidential-client flows and intentionally not supported in `plugin.config.json`.
+- `AUTH_CLIENT_SECRET` — OAuth client secret; required only for confidential-client flows and intentionally not supported in `mcp-server.config.json`.
 
-`$schema` may be included only to give editors validation and autocomplete. See [`plugin.config.schema.json`](plugin.config.schema.json) for valid types and enum values.
+`$schema` may be included only to give editors validation and autocomplete. See [`mcp-server.config.schema.json`](https://github.com/varianter/mcp-server) (shipped with `@variant/mcp-server` at `node_modules/@variant/mcp-server/mcp-server.config.schema.json`) for valid types and enum values.
 
 ## Project structure
 
@@ -75,6 +74,7 @@ plugins/
   standard/          ← starter plugin (copy this to add a new plugin)
     .claude-plugin/
       plugin.json    ← plugin manifest (skills paths, MCP server URL)
+    mcp-server.config.json ← committed runtime defaults for this plugin's MCP server
     skills/          ← skills; each skill may optionally contain a tools/ directory for colocated tools
     skills/*/tools   ← MCP tools colocated with a skill (optional)
     tools/           ← standalone MCP tools (not tied to a skill)
@@ -82,7 +82,6 @@ plugins/
 .claude-plugin/
   marketplace.json   ← repo-level manifest listing all plugins
 scripts/             ← skill validator and packaging tools
-plugin.config.json   ← committed runtime defaults for MCP servers
 ```
 
 ## Adding a skill

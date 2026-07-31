@@ -39,8 +39,8 @@ importers:
   plugins/standard:
     dependencies:
       '@variant/mcp-server':
-        specifier: file:/Users/mikaelbrevik/Sites/repos/variant/mcp-server/variant-mcp-server-0.1.0.tgz
-        version: file:../mcp-server/variant-mcp-server-0.1.0.tgz(@types/node@25.9.1)(esbuild@0.28.1)(supports-color@10.2.2)(tsx@4.22.4)
+        specifier: ^0.1.0
+        version: 0.1.0(@types/node@25.9.1)(esbuild@0.28.1)(supports-color@10.2.2)(tsx@4.22.4)
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -843,9 +843,8 @@ packages:
     resolution: {integrity: sha512-yURCknZhvywvQItHMMmFSo+fq5arCUIyz/CVk7jD89MSai7dkaX8ufjCWp3NttLojoTVbcE72ri+be/TnEbMHw==}
     engines: {node: '>=20.0.0'}
 
-  '@variant/mcp-server@file:../mcp-server/variant-mcp-server-0.1.0.tgz':
-    resolution: {integrity: sha512-xZ+jJu/fKPEea3ZcfAlXa9ypTqMChBcUueMGLGD+roaZdF/3q0VXWa3IWgNj+f5S4P4u526RsstlIz2XOkhb3w==, tarball: file:../mcp-server/variant-mcp-server-0.1.0.tgz}
-    version: 0.1.0
+  '@variant/mcp-server@0.1.0':
+    resolution: {integrity: sha512-gaeBRkKUpEC4KO1odaL2jhfTPGhcgc4TwqYNkkvHWJHBCJR3TT47GC/osVMYFCnfTEbOadCSXgicJ+Eh5EanjA==}
     engines: {node: '>=20.19'}
     hasBin: true
 
@@ -2456,7 +2455,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@variant/mcp-server@file:../mcp-server/variant-mcp-server-0.1.0.tgz(@types/node@25.9.1)(esbuild@0.28.1)(supports-color@10.2.2)(tsx@4.22.4)':
+  '@variant/mcp-server@0.1.0(@types/node@25.9.1)(esbuild@0.28.1)(supports-color@10.2.2)(tsx@4.22.4)':
     dependencies:
       '@modelcontextprotocol/ext-apps': 1.7.3(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       '@modelcontextprotocol/sdk': 1.29.0(supports-color@10.2.2)(zod@4.4.3)

@@ -1,5 +1,5 @@
 {
-  "$schema": "./plugin.config.schema.json",
+  "$schema": "./node_modules/@variant/mcp-server/mcp-server.config.schema.json",
   "mcpPath": "/mcp",
   "auth": {
     "provider": "entra",

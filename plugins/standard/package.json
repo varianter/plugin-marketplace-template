@@ -13,7 +13,7 @@
     "inspect": "pnpm dlx @modelcontextprotocol/inspector@latest --config ./mcp.config.json"
   },
   "dependencies": {
-    "@variant/mcp-server": "file:/Users/mikaelbrevik/Sites/repos/variant/mcp-server/variant-mcp-server-0.1.0.tgz",
+    "@variant/mcp-server": "^0.1.0",
     "zod": "4.4.3"
   },
   "devDependencies": {

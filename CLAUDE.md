@@ -9,6 +9,7 @@ plugins/
   standard/          ← The standard plugin (template for new plugins)
     .claude-plugin/
       plugin.json    ← Claude Code plugin manifest (skills paths, MCP server URL)
+    mcp-server.config.json ← Committed runtime defaults (auth, limits) for this plugin's MCP server
     skills/          ← Skills; each skill may optionally contain colocated MCP tools
       <name>/
         SKILL.md

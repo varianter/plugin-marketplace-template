@@ -65,7 +65,7 @@ jobs:
           docker run -d --name ${{ matrix.plugin }}-mcp -p 8080:8080 \
             -e HOST=0.0.0.0 \
             -e PORT=8080 \
-            -e AUTH_ENABLED=false \
+            -e AUTH_PROVIDER=none \
             ${{ matrix.plugin }}-mcp:test
 
       - name: Health check

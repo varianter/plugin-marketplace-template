@@ -4,5 +4,8 @@ packages:
 allowBuilds:
   esbuild: false
 
+minimumReleaseAgeExclude:
+  - '@variant/mcp-server@0.1.0'
+
 onlyBuiltDependencies:
   - esbuild

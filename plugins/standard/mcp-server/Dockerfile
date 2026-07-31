@@ -30,7 +30,7 @@ COPY --from=builder /build/deploy/node_modules/ ./node_modules/
 # Flatten dist output into /app/ so paths match local dev depth (mcp-server/index.js)
 COPY --from=builder /build/plugins/${PLUGIN_NAME}/mcp-server/dist/ ./
 # Copy public plugin runtime config and manifest (read by the server at startup)
-COPY plugin.config.json ./plugin.config.json
+COPY plugins/${PLUGIN_NAME}/mcp-server.config.json ./mcp-server.config.json
 COPY plugins/${PLUGIN_NAME}/.claude-plugin/ ./.claude-plugin/
 USER mcp
 EXPOSE 8080
