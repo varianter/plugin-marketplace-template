@@ -4,7 +4,7 @@ A multi-plugin workspace for building [Claude Code](https://claude.ai/claude-cod
 
 ## What's included
 
-- **`packages/mcp-server`** — shared MCP infrastructure: Express server, Azure Entra/OIDC auth, session management, widget support
+- **`@variant/mcp-server`** — npm package for shared MCP infrastructure: Express server, OAuth/OIDC auth, session management, widget support
 - **`plugins/standard`** — starter plugin with a `whoami` tool and `example` skill
 - **Build and validation scripts** — typecheck, lint, skill validator, widget bundler
 
@@ -71,8 +71,6 @@ Environment-only secrets:
 ## Project structure
 
 ```
-packages/
-  mcp-server/        ← @variant/mcp-server — shared server infrastructure
 plugins/
   standard/          ← starter plugin (copy this to add a new plugin)
     .claude-plugin/
@@ -154,8 +152,8 @@ From the **repo root**:
 pnpm dev [plugin]        # selected plugin — server + widget watcher (hot-reload)
 pnpm dev:server [plugin] # selected plugin — server only (faster, skips widgets)
 pnpm dev:standard        # standard plugin alias
-pnpm build               # build all packages in dependency order
-pnpm typecheck           # type-check all packages
+pnpm build               # build all plugin servers
+pnpm typecheck           # type-check workspace packages
 pnpm check               # biome lint + format check
 pnpm fix                 # biome auto-fix
 ```
@@ -163,13 +161,14 @@ pnpm fix                 # biome auto-fix
 Additional commands available from **`plugins/standard/`**:
 
 ```bash
-pnpm jam           # MCPJam inspector UI
 pnpm inspect       # official MCP Inspector
 ```
 
 ## Deployment
 
 Trigger the **Deploy** GitHub Actions workflow from the repository UI. Select a plugin (or "all") and environment. Each plugin has its own Docker image (`<plugin>-mcp`) built from `plugins/<plugin>/mcp-server/Dockerfile`.
+
+Docker builds install `@variant/mcp-server` from npm, so publish the package before building images from this template.
 
 Update the registry and deployment target in `.github/workflows/deploy.yml` to match your infrastructure.
 

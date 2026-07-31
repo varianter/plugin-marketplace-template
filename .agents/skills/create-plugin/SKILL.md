@@ -52,7 +52,7 @@ Shared MCP infrastructure should be imported from `@variant/mcp-server`. Plugin 
        "build:widgets": "node ../../packages/mcp-server/dist/buildWidgets.js",
        "typecheck": "tsc -p tsconfig.json --noEmit",
        "start": "node mcp-server/dist/mcp-server/index.js",
-       "jam": "pnpm dlx @mcpjam/inspector@latest --no-telemetry --config ./mcp.config.json --server plugin-mcp --oauth"
+       "inspect": "pnpm dlx @modelcontextprotocol/inspector@latest --config ./mcp.config.json"
      },
      "dependencies": {
        "@variant/mcp-server": "workspace:*",

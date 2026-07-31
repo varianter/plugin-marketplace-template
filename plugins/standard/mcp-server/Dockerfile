@@ -7,9 +7,7 @@ WORKDIR /build
 ARG PLUGIN_NAME=standard
 # Copy workspace configuration
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .npmrc ./
-# Copy workspace packages needed by this plugin
-COPY packages/ ./packages/
-# Copy plugin manifest before install so pnpm can resolve the workspace package
+# Copy plugin manifest before install so pnpm can resolve dependencies
 COPY plugins/${PLUGIN_NAME}/package.json ./plugins/${PLUGIN_NAME}/package.json
 RUN pnpm install --frozen-lockfile
 # Copy plugin files (MCP server, skills with optional colocated tools, and standalone tools)
@@ -17,8 +15,7 @@ COPY plugins/${PLUGIN_NAME}/mcp-server/ ./plugins/${PLUGIN_NAME}/mcp-server/
 COPY plugins/${PLUGIN_NAME}/skills/ ./plugins/${PLUGIN_NAME}/skills/
 COPY plugins/${PLUGIN_NAME}/tools/ ./plugins/${PLUGIN_NAME}/tools/
 COPY plugins/${PLUGIN_NAME}/tsconfig.json ./plugins/${PLUGIN_NAME}/tsconfig.json
-# Build @variant/mcp-server first, then the plugin MCP server
-RUN pnpm --filter @variant/mcp-server run build
+# Build the plugin MCP server
 RUN pnpm --filter "@variant/plugin-${PLUGIN_NAME}" run build
 # Create a standalone deployment bundle with all production deps resolved (no workspace symlinks)
 RUN pnpm deploy --filter "@variant/plugin-${PLUGIN_NAME}" --prod --legacy /build/deploy

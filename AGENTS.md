@@ -54,8 +54,8 @@ export function registerMyTool(server: McpServer): void {
 With widget — colocated directory:
 
 1. Create `plugins/<plugin>/skills/<name>/tools/<toolName>/` containing `<toolName>.ts`, `index.html`, `app.ts`, `<toolName>.svelte`
-2. Load the compiled widget from `../../../../mcp-server/dist/widgets/<tool-name-kebab>/index.html`
-3. The widget build script discovers any `skills/*/tools/*/index.html` for browser bundles
+2. Register the widget with `registerWidgetTool` or load compiled widget HTML with `loadWidgetHtml('<tool-name-kebab>')` from `@variant/mcp-server`
+3. `pnpm exec variant-build-widgets` discovers any `skills/*/tools/*/index.html` for browser bundles
 4. Import the server-side registrar in `plugins/<plugin>/mcp-server/registerTools.ts` and add it to `localTools`
 
 **Standalone tool** (not tied to a skill):
@@ -68,7 +68,7 @@ With widget — colocated directory:
 
 ### Configuration
 
-All config comes from environment variables. See `packages/mcp-server/src/config/config.ts`.
+All config comes from environment variables and plugin defaults. See the `@variant/mcp-server` package documentation for the full configuration surface.
 
 | Var | Default | Notes |
 |---|---|---|
@@ -90,26 +90,27 @@ Uses `StreamableHTTPServerTransport` (HTTP, not stdio):
 ### Local development
 
 ```bash
-pnpm install                     # install all workspace packages at repo root
+pnpm install                     # install workspace packages and npm dependencies at repo root
 cp .env.example .env             # fill in secrets (stays at repo root)
 
 # From repo root:
 pnpm dev [plugin]        # selected plugin — hot-reload server + widgets
 pnpm dev:server [plugin] # selected plugin — server only (faster, skips widgets)
 pnpm dev:standard        # standard plugin alias
-pnpm build               # build @variant/mcp-server then all plugin servers
-pnpm typecheck           # type-check all packages
+pnpm build               # build all plugin servers
+pnpm typecheck           # type-check workspace packages
 pnpm check               # biome lint + format check
 
 # From plugins/standard/:
 pnpm inspect          # MCP Inspector at http://localhost:6274
-pnpm jam              # MCPJam inspector UI
 ```
+
+Known limitation: `@modelcontextprotocol/inspector@2.x`'s published tarball is missing `clients/web/static/sandbox_proxy.html`, so the widget/MCP-Apps sandbox tab fails with `Sandbox not loaded: ENOENT ...` (upstream inspector#1082). Tool/resource testing is unaffected. Revisit once fixed upstream — `@modelcontextprotocol/inspector@1.0.1` (v1, run via `npx` not `pnpm dlx` — v1's bin has a phantom `commander` dependency that pnpm's isolated linking doesn't resolve) renders widgets correctly if you need that in the meantime, at the cost of a "v1 is deprecated" warning.
 
 ### Deployment
 
 Trigger the **Deploy** GitHub Actions workflow manually. Select a plugin name (or "all") and environment. It:
-1. Builds the Docker image using `plugins/<plugin>/mcp-server/Dockerfile` with the repo root as context
+1. Builds the Docker image using `plugins/<plugin>/mcp-server/Dockerfile` with the repo root as context and installs `@variant/mcp-server` from npm
 2. Pushes to ACR (`<plugin>-mcp` image name)
 3. Updates the GitOps deployment target
 

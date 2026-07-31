@@ -7,13 +7,13 @@
     "dev": "pnpm build:widgets && concurrently \"pnpm build:widgets -- --watch --mode development\" \"pnpm dev:server\"",
     "dev:server": "tsx watch --env-file ../../.env mcp-server/index.ts",
     "build": "rm -rf mcp-server/dist && pnpm build:widgets && tsc -p tsconfig.json && cp -r mcp-server/assets mcp-server/dist/mcp-server/assets",
-    "build:widgets": "node ../../packages/mcp-server/dist/buildWidgets.js",
+    "build:widgets": "pnpm exec variant-build-widgets",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node mcp-server/dist/mcp-server/index.js",
-    "jam": "pnpm dlx @mcpjam/inspector@latest --no-telemetry --config ./mcp.config.json --server plugin-mcp --oauth"
+    "inspect": "pnpm dlx @modelcontextprotocol/inspector@latest --config ./mcp.config.json"
   },
   "dependencies": {
-    "@variant/mcp-server": "workspace:*",
+    "@variant/mcp-server": "file:/Users/mikaelbrevik/Sites/repos/variant/mcp-server/variant-mcp-server-0.1.0.tgz",
     "zod": "4.4.3"
   },
   "devDependencies": {

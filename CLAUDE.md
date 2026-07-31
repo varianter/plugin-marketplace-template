@@ -5,11 +5,6 @@ Multi-plugin workspace for building Claude Code plugins with skills, MCP tools, 
 ## Structure
 
 ```
-packages/
-  mcp-server/        ← @variant/mcp-server — shared MCP server infrastructure
-    src/             ← Express setup, auth (Entra/OIDC), config, widgets
-    dist/            ← Compiled output (generated)
-
 plugins/
   standard/          ← The standard plugin (template for new plugins)
     .claude-plugin/
@@ -47,7 +42,7 @@ tsconfig.base.json   ← Shared TypeScript base config
 
 1. Create `plugins/<name>/` with the same structure as `plugins/standard/`
 2. Add `plugins/<name>/.claude-plugin/plugin.json` pointing to its skills and MCP server
-3. Add `plugins/<name>/package.json` with `"@variant/mcp-server": "workspace:*"`
+3. Add `plugins/<name>/package.json` with `"@variant/mcp-server": "^0.1.0"`
 4. Reference the new plugin in `.claude-plugin/marketplace.json`
 5. Add the plugin name to the `options` list and `resolve-matrix` step in `.github/workflows/deploy.yml`
 
@@ -87,15 +82,15 @@ Standalone tool (not tied to a skill):
 ## MCP local development
 
 ```bash
-pnpm install                     # install all workspace packages
+pnpm install                     # install plugin workspace packages and npm dependencies
 cp .env.example .env             # fill in secrets
 
 # From repo root:
 pnpm dev [plugin]        # selected plugin — hot-reload server + widgets
 pnpm dev:server [plugin] # selected plugin — hot-reload server only (faster)
 pnpm dev:standard        # standard plugin alias
-pnpm build               # build @variant/mcp-server then all plugin servers
-pnpm typecheck           # type-check all packages
+pnpm build               # build all plugin servers
+pnpm typecheck           # type-check workspace packages
 pnpm check               # biome lint + format
 
 # Add each new plugin to the CI/deploy matrices.
@@ -103,7 +98,7 @@ pnpm check               # biome lint + format
 
 ## @variant/mcp-server API
 
-The shared package exports:
+The shared npm package exports:
 
 ```typescript
 import { getRequestContext, loadWidgetHtml, log } from '@variant/mcp-server';
@@ -115,11 +110,14 @@ import type { McpServer, RequestContext, ServerMetadata, Config } from '@variant
 - `getRequestContext()` — returns the authenticated user context inside a tool handler
 - `log(level, msg, extra?)` — structured JSON logger
 - `loadWidgetHtml(name)` — loads a built widget and injects the ext-apps bundle
+- `variant-build-widgets` — CLI that discovers and builds `skills/*/tools/*/index.html` widgets
 
 ## Deployment
 
 Trigger the **Deploy** GitHub Actions workflow from the repository UI. Select a plugin (or "all") and environment. The workflow builds the Docker image from `plugins/<plugin>/mcp-server/Dockerfile` with the repo root as build context.
 
 Each plugin's image name is `<plugin>-mcp` (e.g. `standard-mcp`).
+
+Docker builds install `@variant/mcp-server` from npm, so publish the package before deploying this template.
 
 Update the production MCP URL in `plugins/<plugin>/.claude-plugin/plugin.json` after the first deployment.
