@@ -10,11 +10,6 @@
       "zod": ["node_modules/zod/index.d.ts"]
     }
   },
-  "include": [
-    "../../types/**/*.d.ts",
-    "mcp-server/index.ts",
-    "skills/*/tools/**/*",
-    "tools/**/*"
-  ],
+  "include": ["../../types/**/*.d.ts", "mcp-server/index.ts", "skills/*/tools/**/*", "tools/**/*"],
   "exclude": ["node_modules", "mcp-server/dist", "**/*.test.ts"]
 }
